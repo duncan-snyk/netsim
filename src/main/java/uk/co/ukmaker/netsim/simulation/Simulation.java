@@ -30,7 +30,6 @@ public class Simulation {
 		
 		long moment;
 		
-		circuit.initialise();
 		printHeaders();
 		
 		for(moment = 0; moment < howLongFor; moment++) {

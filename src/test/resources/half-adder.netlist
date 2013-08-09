@@ -11,8 +11,8 @@ entity halfAdder
 	output carry
 	
 	# declare components
-	component and AndGate
-	component xor XorGate
+	component and gates.AndGate
+	component xor gates.XorGate
 	
 	# wire up the components
 	net _a         a and.a xor.a

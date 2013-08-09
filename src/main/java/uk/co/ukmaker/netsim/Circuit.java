@@ -47,8 +47,8 @@ public class Circuit extends Component {
 		}
 	}
 
-	public Net addNet() {
-		Net net = new Net("G_"+netId++);
+	public Net addNet(String name) {
+		Net net = new Net(String.format("%s_%d", name, netId++));
 		nets.add(net);
 		return net;
 	}
@@ -57,18 +57,7 @@ public class Circuit extends Component {
 		return nets;
 	}
 	
-	public void initialise() {
-		// build the list of components
-		components.clear();
-		for(Net n : nets) {
-			
-			for(Input p : n.getSinks()) {
-				if(p.getComponent() != null) components.add(p.getComponent());
-			}
-			
-			for(Output p : n.getSources()) {
-				if(p.getComponent() != null) components.add(p.getComponent());
-			}
-		}
+	public void addComponent(Component c) {
+		components.add(c);
 	}
 }

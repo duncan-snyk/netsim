@@ -1,46 +1,50 @@
-package uk.co.ukmaker.netsim;
+package uk.co.ukmaker.netsim.netlist;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
+import uk.co.ukmaker.netsim.Circuit;
+import uk.co.ukmaker.netsim.Component;
+import uk.co.ukmaker.netsim.Net;
+import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.components.gates.AndGate;
 import uk.co.ukmaker.netsim.components.gates.XorGate;
 import uk.co.ukmaker.netsim.simulation.SequenceGenerator;
 import uk.co.ukmaker.netsim.simulation.Simulation;
 import uk.co.ukmaker.netsim.simulation.TestProbe;
 
-
-public class StandaloneTest {
+public class ParserTest {
 	
 	@Test
-	public void test() {
+	public void shouldCreateHalfAdder() throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, ParsingException {
+		
+		InputStream netlist = ParserTest.class.getClassLoader().getResourceAsStream("half-adder.netlist");
+		
+		Parser p = new Parser();
+		p.parse(netlist);
+		
+		Component halfAdder = p.getEntity();
 		
 		// Construct a simple circuit and test it
 		// This will be a half-adder
-		Circuit circuit = new Circuit("Test");
+		Circuit circuit = new Circuit("TestFixture");
+		circuit.addComponent(halfAdder);
 
-		AndGate and = new AndGate();
-		XorGate xor = new XorGate();
+		Net neta = circuit.addNet("InputA");
+		Net netb = circuit.addNet("InputB");
 		
-		circuit.addComponent(and);
-		circuit.addComponent(xor);
+		Net sumNet = circuit.addNet("Sum");
+		Net carryNet = circuit.addNet("Carry");
 		
-		Net neta = circuit.addNet();
-		Net netb = circuit.addNet();
+		neta.addPort(halfAdder.getPorts().get("a"));
+		netb.addPort(halfAdder.getPorts().get("b"));
+		sumNet.addPort(halfAdder.getPorts().get("sum"));
+		carryNet.addPort(halfAdder.getPorts().get("carry"));
 		
-		Net sumNet = circuit.addNet();
-		Net carryNet = circuit.addNet();
-		
-		neta.addPort(and.getPorts().get("a"));
-		neta.addPort(xor.getPorts().get("a"));
-		
-		netb.addPort(and.getPorts().get("b"));
-		netb.addPort(xor.getPorts().get("b"));
-		
-		sumNet.addPort(xor.getPorts().get("q"));
-		carryNet.addPort(and.getPorts().get("q"));
 		
 		SequenceGenerator seqa = new SequenceGenerator();
 		seqa.addValue(0, SignalValue.X);
@@ -92,16 +96,14 @@ public class StandaloneTest {
 		probes.add(b);
 		probes.add(sum);
 		probes.add(carry);
-		
 		circuit.addComponent(seqa);
 		circuit.addComponent(seqb);
 		circuit.addComponent(sum);
 		circuit.addComponent(carry);
-		
 		Simulation sim = new Simulation(circuit, probes);
 		sim.simulate(10);
 		
-		
+
 	}
 
 }
