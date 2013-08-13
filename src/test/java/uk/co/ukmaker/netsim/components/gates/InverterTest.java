@@ -14,30 +14,32 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.components.ComponentTest;
-import uk.co.ukmaker.netsim.components.gates.Inverter;
-import uk.co.ukmaker.netsim.ports.Input;
-import uk.co.ukmaker.netsim.ports.Output;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.models.gates.Inverter;
+import uk.co.ukmaker.netsim.pins.Input;
+import uk.co.ukmaker.netsim.pins.InputPin;
+import uk.co.ukmaker.netsim.pins.Output;
+import uk.co.ukmaker.netsim.pins.OutputPin;
 
 public class InverterTest extends ComponentTest {
 	
 	Inverter gate;
-	Input a;
-	Output q;
+	InputPin a;
+	OutputPin q;
 	
 	@Override
-	public Component getComponent() {
+	public Model getComponent() {
 		return gate;
 	}
 
 	@Override
-	public List<Input> getInputs() {
+	public List<InputPin> getInputs() {
 		return Lists.newArrayList(a);
 	}
 
 	@Override
-	public List<Output> getOutputs() {
+	public List<OutputPin> getOutputs() {
 		return Lists.newArrayList(q);
 	}
 
@@ -46,8 +48,8 @@ public class InverterTest extends ComponentTest {
 		
 		gate = new Inverter();
 		
-		a = (Input)gate.getPorts().get("a");
-		q = (Output)gate.getPorts().get("q");
+		a = (InputPin)gate.getPins().get("a");
+		q = (OutputPin)gate.getPins().get("q");
 	}
 	
 	@Test

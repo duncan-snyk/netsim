@@ -1,0 +1,44 @@
+####
+# Netlist using several fullAdders to implement a 4-bit adder
+####
+import full-adder.netlist
+
+entity adderSlice
+
+	# Pins
+	input a[4]
+	input b[4]
+	input cin
+	
+	output cout
+	output q[4]
+	
+	component fa0 fullAdder
+	component fa1 fullAdder
+	component fa2 fullAdder
+	component fa3 fullAdder
+	
+
+	net cin fa0.cin
+	net a0 fa0.a
+	net b0 fa0.b
+	net q0 fa0.sum
+	
+	net fa0.cout fa1.cin
+	net a1 fa1.a
+	net b1 fa1.b
+	net q1 fa1.sum
+	
+	net fa1.cout fa2.cin
+	net a2 fa2.a
+	net b2 fa2.b
+	net q2 fa2.sum
+	
+	net fa2.cout fa3.cin
+	net a3 fa3.a
+	net b3 fa3.b
+	net q3 fa3.sum
+	
+	net cout fa3.cout
+	
+; # end entity

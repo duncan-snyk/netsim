@@ -3,9 +3,11 @@ package uk.co.ukmaker.netsim;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.co.ukmaker.netsim.ports.Input;
-import uk.co.ukmaker.netsim.ports.Output;
-import uk.co.ukmaker.netsim.ports.Port;
+import uk.co.ukmaker.netsim.pins.Input;
+import uk.co.ukmaker.netsim.pins.InputPin;
+import uk.co.ukmaker.netsim.pins.Output;
+import uk.co.ukmaker.netsim.pins.OutputPin;
+import uk.co.ukmaker.netsim.pins.Pin;
 
 /**
  * A Net ties two or more ports together. It represents all the wires connectings the ports.
@@ -21,8 +23,8 @@ public class Net {
 	
 	private SignalValue v;
 	
-	private List<Input> sinks = new ArrayList<Input>();
-	private List<Output> sources = new ArrayList<Output>();
+	private List<InputPin> sinks = new ArrayList<InputPin>();
+	private List<OutputPin> sources = new ArrayList<OutputPin>();
 	
 	public Net(final String id) {
 		this.id = id;
@@ -32,22 +34,22 @@ public class Net {
 		return id;
 	}
 	
-	public void addPort(Port p) {
+	public void addPin(Pin p) {
 		
-		if(p instanceof Input) {
-			sinks.add((Input)p);
+		if(p instanceof InputPin) {
+			sinks.add((InputPin)p);
 		}
 		
-		if(p instanceof Output) {
-			sources.add((Output)p);
+		if(p instanceof OutputPin) {
+			sources.add((OutputPin)p);
 		}
 	}
 	
-	public List<Input> getSinks() {
+	public List<InputPin> getSinks() {
 		return sinks;
 	}
 	
-	public List<Output> getSources() {
+	public List<OutputPin> getSources() {
 		return sources;
 	}
 	
@@ -95,10 +97,10 @@ public class Net {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("NET %s = %s \n", id, v));
-		for(Input i : sinks) {
+		for(InputPin i : sinks) {
 			sb.append(String.format("    %s\n", i.getName()));
 		}
-		for(Output o : sources) {
+		for(OutputPin o : sources) {
 			sb.append(String.format("    %s\n", o.getName()));
 		}
 		

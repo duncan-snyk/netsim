@@ -7,47 +7,50 @@ import org.junit.Test;
 
 import static com.google.common.collect.Lists.*;
 
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.components.ComponentTest;
-import uk.co.ukmaker.netsim.ports.Input;
-import uk.co.ukmaker.netsim.ports.Output;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.models.flipflops.TransparentDTypeClrn;
+import uk.co.ukmaker.netsim.pins.Input;
+import uk.co.ukmaker.netsim.pins.InputPin;
+import uk.co.ukmaker.netsim.pins.Output;
+import uk.co.ukmaker.netsim.pins.OutputPin;
 import static org.junit.Assert.*;
 import static uk.co.ukmaker.netsim.SignalValue.*;
 
 public class TransparentDTypeClrnTest extends ComponentTest {
 	
-	private Input d;
-	private Input clk;
-	private Input clrn;
-	private Output q;
-	private Output qn;
+	private InputPin d;
+	private InputPin clk;
+	private InputPin clrn;
+	private OutputPin q;
+	private OutputPin qn;
 	
 	private TransparentDTypeClrn ff;
 	
 
 	@Override
-	public Component getComponent() {
+	public Model getComponent() {
 		return ff;
 	}
 
 	@Override
-	public List<Input> getInputs() {
+	public List<InputPin> getInputs() {
 		return newArrayList(d, clk, clrn);
 	}
 
 	@Override
-	public List<Output> getOutputs() {
+	public List<OutputPin> getOutputs() {
 		return newArrayList(q, qn);
 	}
 	
 	@Override
 	public void setup() {
 		ff = new TransparentDTypeClrn();
-		d = (Input)ff.getPorts().get("d");
-		clk = (Input)ff.getPorts().get("clk");
-		clrn = (Input)ff.getPorts().get("clrn");
-		q = (Output)ff.getPorts().get("q");
-		qn = (Output)ff.getPorts().get("qn");
+		d = (InputPin)ff.getPins().get("d");
+		clk = (InputPin)ff.getPins().get("clk");
+		clrn = (InputPin)ff.getPins().get("clrn");
+		q = (OutputPin)ff.getPins().get("q");
+		qn = (OutputPin)ff.getPins().get("qn");
 	}
 	
 	@Test

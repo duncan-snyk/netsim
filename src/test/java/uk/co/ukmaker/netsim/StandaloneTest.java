@@ -5,8 +5,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import uk.co.ukmaker.netsim.components.gates.AndGate;
-import uk.co.ukmaker.netsim.components.gates.XorGate;
+import uk.co.ukmaker.netsim.models.gates.AndGate;
+import uk.co.ukmaker.netsim.models.gates.XorGate;
+import uk.co.ukmaker.netsim.netlist.Circuit;
+import uk.co.ukmaker.netsim.netlist.Wire;
 import uk.co.ukmaker.netsim.simulation.SequenceGenerator;
 import uk.co.ukmaker.netsim.simulation.Simulation;
 import uk.co.ukmaker.netsim.simulation.TestProbe;
@@ -27,20 +29,20 @@ public class StandaloneTest {
 		circuit.addComponent(and);
 		circuit.addComponent(xor);
 		
-		Net neta = circuit.addNet();
-		Net netb = circuit.addNet();
+		Wire neta = new Wire();
+		Wire netb = new Wire();
 		
-		Net sumNet = circuit.addNet();
-		Net carryNet = circuit.addNet();
+		Wire sumNet = new Wire();
+		Wire carryNet = new Wire();
 		
-		neta.addPort(and.getPorts().get("a"));
-		neta.addPort(xor.getPorts().get("a"));
+		neta.addTerminal(and.getPins().get("a"));
+		neta.addTerminal(xor.getPins().get("a"));
 		
-		netb.addPort(and.getPorts().get("b"));
-		netb.addPort(xor.getPorts().get("b"));
+		netb.addTerminal(and.getPins().get("b"));
+		netb.addTerminal(xor.getPins().get("b"));
 		
-		sumNet.addPort(xor.getPorts().get("q"));
-		carryNet.addPort(and.getPorts().get("q"));
+		sumNet.addTerminal(xor.getPins().get("q"));
+		carryNet.addTerminal(and.getPins().get("q"));
 		
 		SequenceGenerator seqa = new SequenceGenerator();
 		seqa.addValue(0, SignalValue.X);
@@ -48,7 +50,7 @@ public class StandaloneTest {
 		seqa.addValue(2, SignalValue.ONE);
 		seqa.addValue(3, SignalValue.ZERO);
 		seqa.addValue(4, SignalValue.ONE);
-		neta.addPort(seqa.getPorts().get("q"));
+		neta.addTerminal(seqa.getPins().get("q"));
 
 		
 		SequenceGenerator seqb = new SequenceGenerator();
@@ -57,12 +59,12 @@ public class StandaloneTest {
 		seqb.addValue(2, SignalValue.ZERO);
 		seqb.addValue(3, SignalValue.ONE);
 		seqb.addValue(4, SignalValue.ONE);
-		netb.addPort(seqb.getPorts().get("q"));
+		netb.addTerminal(seqb.getPins().get("q"));
 		
 		TestProbe a = new TestProbe("A");
 		TestProbe b = new TestProbe("B");
-		neta.addPort(a.getPorts().get("pin"));
-		netb.addPort(b.getPorts().get("pin"));
+		neta.addTerminal(a.getPins().get("pin"));
+		netb.addTerminal(b.getPins().get("pin"));
 		
 		TestProbe sum = new TestProbe("SUM");
 		sum.expect(0, SignalValue.X);
@@ -84,8 +86,8 @@ public class StandaloneTest {
 		carry.expect(6, SignalValue.ONE);
 		carry.expect(7, SignalValue.ONE);
 		
-		sumNet.addPort(sum.getPorts().get("pin"));
-		carryNet.addPort(carry.getPorts().get("pin"));
+		sumNet.addTerminal(sum.getPins().get("pin"));
+		carryNet.addTerminal(carry.getPins().get("pin"));
 
 		List<TestProbe> probes = new ArrayList<TestProbe>();
 		probes.add(a);

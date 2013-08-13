@@ -6,28 +6,30 @@ import java.util.List;
 
 import org.junit.Before;
 
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.ports.Input;
-import uk.co.ukmaker.netsim.ports.Output;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.pins.Input;
+import uk.co.ukmaker.netsim.pins.InputPin;
+import uk.co.ukmaker.netsim.pins.Output;
+import uk.co.ukmaker.netsim.pins.OutputPin;
 
 abstract public class ComponentTest {
 	
 	protected long t = 0;
 	
-	protected Component component;
-	protected List<Input> inputs;
-	protected List<Output> outputs;
+	protected Model model;
+	protected List<InputPin> inputs;
+	protected List<OutputPin> outputs;
 	
-	public abstract Component getComponent();
+	public abstract Model getComponent();
 	
-	public abstract List<Input> getInputs();
-	public abstract List<Output> getOutputs();
+	public abstract List<InputPin> getInputs();
+	public abstract List<OutputPin> getOutputs();
 	
 	@Before
 	public void prepare() {
 		setup();
-		component = getComponent();
+		model = getComponent();
 		inputs = getInputs();
 		outputs = getOutputs();
 	}
@@ -38,13 +40,13 @@ abstract public class ComponentTest {
 		
 		int i=0;
 		
-		component.propagateOutputEvents(t);
+		model.propagateOutputEvents(t);
 		
 		for(SignalValue v : values) {
 			inputs.get(i++).setInputValue(t, v);
 		}
 		
-		component.update(t);
+		model.update(t);
 		t++;
 	}
 	
@@ -60,7 +62,7 @@ abstract public class ComponentTest {
 		
 		for(int i=0; i<outputs.size(); i++) {
 			
-			Output p = outputs.get(i);
+			OutputPin p = outputs.get(i);
 			
 			SignalValue c = values[i*2];
 			SignalValue s = values[(i*2) + 1];

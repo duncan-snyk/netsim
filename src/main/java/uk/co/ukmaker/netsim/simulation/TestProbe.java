@@ -3,21 +3,22 @@ package uk.co.ukmaker.netsim.simulation;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.ports.Input;
-import uk.co.ukmaker.netsim.ports.InputPort;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.pins.Input;
+import uk.co.ukmaker.netsim.pins.Input;
+import uk.co.ukmaker.netsim.pins.InputPin;
 
-public class TestProbe extends Component {
+public class TestProbe extends Model {
 	
-	private Input pin = new InputPort(this, "pin");
+	private InputPin pin = new InputPin(this, "pin");
 	
 	private Map<Long, SignalValue> expectedValues = new HashMap<Long, SignalValue>();
 
 
 	public TestProbe(String name) {
 		super(name);
-		addPort(pin);
+		addPin(pin);
 	}
 	
 	public TestProbe() {

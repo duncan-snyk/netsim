@@ -3,20 +3,20 @@ package uk.co.ukmaker.netsim.simulation;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.ports.Output;
-import uk.co.ukmaker.netsim.ports.OutputPort;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.pins.OutputPin;
+import uk.co.ukmaker.netsim.pins.Output;
 
-public class SequenceGenerator extends Component {
+public class SequenceGenerator extends Model {
 	
-	private final Output q = new OutputPort(this, "q");
+	private final OutputPin q = new OutputPin(this, "q");
 	
 	private Map<Long, SignalValue> values = new HashMap<Long, SignalValue>();
 	
 	public SequenceGenerator(String name) {
 		super(name);
-		addPort(q);
+		addPin(q);
 	}
 	
 	public SequenceGenerator() {

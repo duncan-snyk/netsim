@@ -3,7 +3,7 @@ package uk.co.ukmaker.netsim.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.co.ukmaker.netsim.Circuit;
+import uk.co.ukmaker.netsim.netlist.Circuit;
 
 public class Simulation {
 	

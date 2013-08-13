@@ -7,17 +7,23 @@ import java.util.List;
 
 import org.junit.Test;
 
-import uk.co.ukmaker.netsim.Circuit;
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.Net;
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.components.gates.AndGate;
-import uk.co.ukmaker.netsim.components.gates.XorGate;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.models.gates.AndGate;
+import uk.co.ukmaker.netsim.models.gates.XorGate;
 import uk.co.ukmaker.netsim.simulation.SequenceGenerator;
 import uk.co.ukmaker.netsim.simulation.Simulation;
 import uk.co.ukmaker.netsim.simulation.TestProbe;
 
 public class ParserTest {
+	
+	@Test
+	public void shouldTokenize() {
+		String s = "component a     b";
+		Parser p = new Parser();
+		p.tokenize(s);
+	}
 	
 	@Test
 	public void shouldCreateHalfAdder() throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, ParsingException {
@@ -34,16 +40,16 @@ public class ParserTest {
 		Circuit circuit = new Circuit("TestFixture");
 		circuit.addComponent(halfAdder);
 
-		Net neta = circuit.addNet("InputA");
-		Net netb = circuit.addNet("InputB");
+		Wire neta = new Wire();
+		Wire netb = new Wire();
 		
-		Net sumNet = circuit.addNet("Sum");
-		Net carryNet = circuit.addNet("Carry");
+		Wire sumNet = new Wire();
+		Wire carryNet = new Wire(); 
 		
-		neta.addPort(halfAdder.getPorts().get("a"));
-		netb.addPort(halfAdder.getPorts().get("b"));
-		sumNet.addPort(halfAdder.getPorts().get("sum"));
-		carryNet.addPort(halfAdder.getPorts().get("carry"));
+		neta.addTerminal(halfAdder.getTerminals().get("a"));
+		netb.addTerminal(halfAdder.getTerminals().get("b"));
+		sumNet.addTerminal(halfAdder.getTerminals().get("sum"));
+		carryNet.addTerminal(halfAdder.getTerminals().get("carry"));
 		
 		
 		SequenceGenerator seqa = new SequenceGenerator();
@@ -52,7 +58,7 @@ public class ParserTest {
 		seqa.addValue(2, SignalValue.ONE);
 		seqa.addValue(3, SignalValue.ZERO);
 		seqa.addValue(4, SignalValue.ONE);
-		neta.addPort(seqa.getPorts().get("q"));
+		neta.addTerminal(seqa.getPins().get("q"));
 
 		
 		SequenceGenerator seqb = new SequenceGenerator();
@@ -61,12 +67,12 @@ public class ParserTest {
 		seqb.addValue(2, SignalValue.ZERO);
 		seqb.addValue(3, SignalValue.ONE);
 		seqb.addValue(4, SignalValue.ONE);
-		netb.addPort(seqb.getPorts().get("q"));
+		netb.addTerminal(seqb.getPins().get("q"));
 		
 		TestProbe a = new TestProbe("A");
 		TestProbe b = new TestProbe("B");
-		neta.addPort(a.getPorts().get("pin"));
-		netb.addPort(b.getPorts().get("pin"));
+		neta.addTerminal(a.getPins().get("pin"));
+		netb.addTerminal(b.getPins().get("pin"));
 		
 		TestProbe sum = new TestProbe("SUM");
 		sum.expect(0, SignalValue.X);
@@ -88,8 +94,8 @@ public class ParserTest {
 		carry.expect(6, SignalValue.ONE);
 		carry.expect(7, SignalValue.ONE);
 		
-		sumNet.addPort(sum.getPorts().get("pin"));
-		carryNet.addPort(carry.getPorts().get("pin"));
+		sumNet.addTerminal(sum.getPins().get("pin"));
+		carryNet.addTerminal(carry.getPins().get("pin"));
 
 		List<TestProbe> probes = new ArrayList<TestProbe>();
 		probes.add(a);

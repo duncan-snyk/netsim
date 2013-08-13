@@ -1,16 +1,16 @@
 package uk.co.ukmaker.netsim.simulation;
 
-import uk.co.ukmaker.netsim.Component;
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.ports.Output;
-import uk.co.ukmaker.netsim.ports.OutputPort;
+import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.pins.OutputPin;
+import uk.co.ukmaker.netsim.pins.Output;
 
-public class ClockGenerator extends Component {
+public class ClockGenerator extends Model {
 	
 	final long period;
 	boolean high;
 	
-	private Output q = new OutputPort(this, "q");
+	private OutputPin q = new OutputPin(this, "q");
 	
 	public ClockGenerator(String name, final long period, final boolean startHigh) {
 		
@@ -18,7 +18,7 @@ public class ClockGenerator extends Component {
 		
 		this.period = period;
 		this.high = startHigh;
-		addPort(q);
+		addPin(q);
 	}
 
 	public ClockGenerator(final long period, final boolean startHigh) {

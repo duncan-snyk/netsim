@@ -1,23 +1,37 @@
 ####
 # Netlist describing a half-adder
 ####
-entity halfAdder
+entity fullAdder
 
 	# declare inputs and outputs
 	input a
 	input b
+	input cin
 	
 	output sum
 	output carry
 	
 	# declare components
-	component and gates.AndGate
-	component xor gates.XorGate
+	component and1 gates.AndGate
+	component and2 gates.AndGate
+	component xor1 gates.XorGate
+	component xor2 gates.XorGate
+	component or   gates.XorGate
 	
 	# wire up the components
-	net _a         a and.a xor.a
-	net _b         b and.b xor.b
-	net _sum     sum xor.q
-	net _carry carry and.q
+	
+	# Inputs
+	net _a     a    xor1.a and2.a
+	net _b     b    xor1.b and2.b
+	net _ci    cin  xor2.b and1.a
+	
+	# Interconnect
+	net _hs    xor1.q xor2.a and1.b
+	net _hc    and2.q or.b
+	net _cp    and1.q or.a
+	
+	# Outputs
+	net _sum   sum xor1.q
+	net _carry carry or.q
 	
 ; # End of entity

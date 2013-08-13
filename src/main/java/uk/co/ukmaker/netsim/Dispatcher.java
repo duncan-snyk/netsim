@@ -2,6 +2,8 @@ package uk.co.ukmaker.netsim;
 
 import java.util.List;
 
+import uk.co.ukmaker.netsim.models.Model;
+
 /**
  * An instance of this class handles running the simulation
  * 
@@ -12,7 +14,7 @@ public class Dispatcher {
 	
 	private Broadcaster broadcaster;
 	
-	private List<Component> components;
+	private List<Model> models;
 	
 	
 	/**
@@ -23,7 +25,7 @@ public class Dispatcher {
 		broadcaster.askForQuiet();
 		broadcaster.resetAll();
 		
-		for(Component c : components) {
+		for(Model c : models) {
 			broadcaster.broadcastAndNoteFutures(c);
 		}
 		
