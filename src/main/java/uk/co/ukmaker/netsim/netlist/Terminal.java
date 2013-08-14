@@ -19,13 +19,19 @@ public class Terminal {
 		IO
 	}
 	
-	protected List<Net> nets = new ArrayList<Net>();
+	protected Wire internalWire;
+	protected Wire externalWire;
 	
 	private String name;
 	
 	protected Type type;
 	
-	public Terminal(String name, Type type) {
+	protected Component component;
+	
+	protected boolean netlisted = false;
+	
+	public Terminal(Component component, String name, Type type) {
+		this.component = component;
 		this.name = name;
 		this.type = type;
 	}
@@ -34,16 +40,46 @@ public class Terminal {
 		return name;
 	}
 	
-	public List<Net> getNets() {
-		return nets;
-	}
-	
-	public void connect(Net net) {
-		nets.add(net);
-	}
-	
 	public Type getType() {
 		return type;
+	}
+	
+	public Component getComponent() {
+		return component;
+	}
+
+	public Wire getInternalWire() {
+		return internalWire;
+	}
+
+	public void setInternalWire(Wire internalWire) {
+		this.internalWire = internalWire;
+		internalWire.addTerminal(this);
+	}
+
+	public Wire getExternalWire() {
+		return externalWire;
+	}
+
+	public void setExternalWire(Wire externalWire) {
+		this.externalWire = externalWire;
+		externalWire.addTerminal(this);
+	}
+
+	public boolean isNetlisted() {
+		return netlisted;
+	}
+
+	public void setNetlisted(boolean netlisted) {
+		this.netlisted = netlisted;
+	}
+	
+	public String getPath() {
+		return component.getPath()+"_"+name;
+	}
+	
+	public String toString() {
+		return getPath();
 	}
 
 }

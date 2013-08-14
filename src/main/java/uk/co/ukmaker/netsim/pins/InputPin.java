@@ -5,7 +5,7 @@ import uk.co.ukmaker.netsim.models.Model;
 
 public class InputPin extends Pin implements Input {
 	
-	private SignalValue value;
+	private SignalValue value = SignalValue.X;
 
 	public InputPin(final Model model, final String name) {
 		super(model, name);

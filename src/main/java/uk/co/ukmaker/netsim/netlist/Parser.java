@@ -85,8 +85,6 @@ public class Parser {
 		
 		tokenize(line);
 		
-		Wire w;
-		
 		while(more() && state != DONE) {
 			
 			tok = getToken();
@@ -132,7 +130,7 @@ public class Parser {
 				if(terminals.containsKey(tok)) {
 					throw new ParsingException(lineNumber, "Duplicate input name: "+tok);
 				}
-				Terminal input = new Terminal(tok, Terminal.Type.INPUT);
+				Terminal input = new Terminal(circuit, tok, Terminal.Type.INPUT);
 				terminals.put(tok, input);
 				circuit.addTerminal(input);
 				
@@ -144,7 +142,7 @@ public class Parser {
 					throw new ParsingException(lineNumber, "Duplicate output name: "+tok);
 				}
 				
-				Terminal output = new Terminal(tok, Terminal.Type.OUTPUT);
+				Terminal output = new Terminal(circuit, tok, Terminal.Type.OUTPUT);
 				terminals.put(tok, output);
 				circuit.addTerminal(output);
 				break;
@@ -172,23 +170,23 @@ public class Parser {
 				} else {
 					Model model;
 					try {
-						model = (Model)Class.forName("uk.co.ukmaker.netsim.components."+clazz).newInstance();
+						
+						clazz = "uk.co.ukmaker.netsim.models."+clazz;
+						model = (Model)Class.forName(clazz).newInstance();
+						
 						// Build a Device to represent it
-						c = new Device(tok, clazz);
-						for(Pin p : model.getPins().values()) {
-							if(p instanceof InputPin) {
-								((Device)c).addTerminal(new Terminal(p.getName(), Terminal.Type.INPUT));
-							} else {
-								((Device)c).addTerminal(new Terminal(p.getName(), Terminal.Type.OUTPUT));
-							}
-						}
+						c = new Device(tok, model);
 						
 					} catch (ClassNotFoundException e) {
 						throw new ParsingException(lineNumber, "Device not found: "+clazz);
 					}
 				}
 				components.put(tok,  c);
-				circuit.addComponent(c);
+				try {
+					circuit.addComponent(c);
+				} catch (Exception e) {
+					throw new ParsingException(lineNumber, e.getMessage());
+				}
 				break;
 				
 			case NET:
@@ -197,7 +195,8 @@ public class Parser {
 					throw new ParsingException(lineNumber, "Duplicate net name: "+tok);
 				}
 				
-				w = new Wire();
+				Wire w = new Wire();
+				Terminal t;
 				
 				wires.put(tok,  w);
 				
@@ -216,10 +215,15 @@ public class Parser {
 							throw new ParsingException(lineNumber, "Unknown component: "+componentName);
 						}
 						
-						w.addTerminal(components.get(componentName).getTerminal(portName));
-						
+						t = components.get(componentName).getTerminal(portName);
+						t.setExternalWire(w);
 					} else {
-						w.addTerminal(terminals.get(name));
+						t = terminals.get(name);
+						
+						if(t == null) {
+							throw new ParsingException(lineNumber, "No such terminal: "+name);
+						}
+						t.setInternalWire(w);
 					}
 				}
 				

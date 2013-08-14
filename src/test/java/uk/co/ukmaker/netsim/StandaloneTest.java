@@ -7,11 +7,11 @@ import org.junit.Test;
 
 import uk.co.ukmaker.netsim.models.gates.AndGate;
 import uk.co.ukmaker.netsim.models.gates.XorGate;
+import uk.co.ukmaker.netsim.models.test.SequenceGenerator;
+import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Circuit;
 import uk.co.ukmaker.netsim.netlist.Wire;
-import uk.co.ukmaker.netsim.simulation.SequenceGenerator;
 import uk.co.ukmaker.netsim.simulation.Simulation;
-import uk.co.ukmaker.netsim.simulation.TestProbe;
 
 
 public class StandaloneTest {

@@ -70,6 +70,7 @@ public class Net {
 			for(Output p : sources) {
 				
 				sv = p.getScheduledOutputValue(moment);
+				p.propagateOutputValue(moment);
 				
 				if(sv != null) {
 					
@@ -98,10 +99,10 @@ public class Net {
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("NET %s = %s \n", id, v));
 		for(InputPin i : sinks) {
-			sb.append(String.format("    %s\n", i.getName()));
+			sb.append(String.format("    ->%s\n", i.getName()));
 		}
 		for(OutputPin o : sources) {
-			sb.append(String.format("    %s\n", o.getName()));
+			sb.append(String.format("    %s->\n", o.getName()));
 		}
 		
 		return sb.toString();

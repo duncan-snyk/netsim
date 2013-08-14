@@ -29,5 +29,9 @@ abstract public class Pin {
 	public String getName() {
 		return name;
 	}
+	
+	public String getPath() {
+		return getComponent().getName()+"_"+getName();
+	}
 
 }

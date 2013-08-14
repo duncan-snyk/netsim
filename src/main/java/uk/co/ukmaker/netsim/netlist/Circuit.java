@@ -21,12 +21,22 @@ import uk.co.ukmaker.netsim.pins.Output;
  */
 public class Circuit implements Component {
 	
+	private Component parentComponent;
 	private String name;
 	private Map<String, Terminal> terminals = new HashMap<String, Terminal>();
-	private List<Component> components = new ArrayList<Component>();
+	private Map<String, Component> components = new HashMap<String, Component>();
 	
 	public Circuit(String name) {
+		this(null, name);
+	}
+
+	public Circuit(Component parentComponent, String name) {
+		this.parentComponent = parentComponent;
 		this.name = name;
+	}
+	
+	public void setParentComponent(Component parent) {
+		parentComponent = parent;
 	}
 
 	@Override
@@ -34,6 +44,15 @@ public class Circuit implements Component {
 		return name;
 	}
 
+	@Override
+	public String getPath() {
+		if(parentComponent == null) {
+			return "/"+name;
+		}
+		
+		return parentComponent.getName()+"/"+name;
+	}
+	
 	@Override
 	public Collection<Terminal> getTerminals() {
 		return terminals.values();
@@ -49,10 +68,27 @@ public class Circuit implements Component {
 	}
 	
 	public Collection<Component> getComponents() {
-		return components;
+		return components.values();
 	}
 	
-	public void addComponent(Component c) {
-		components.add(c);
+	public void addComponent(Component c) throws Exception {
+		if(components.containsKey(c.getName())) {
+			throw new Exception("Component "+getName()+" already contains a sub-component "+c.getName());
+		}
+		components.put(c.getName(), c);
+		c.setParentComponent(this);
+	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(getPath());
+		sb.append("\n");
+		for(Component c : getComponents()) {
+			sb.append("  ");
+			sb.append(c.getName());
+			sb.append("\n");
+		}
+		
+		return sb.toString();
 	}
 }
