@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import uk.co.ukmaker.netsim.Net;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.pins.Pin;

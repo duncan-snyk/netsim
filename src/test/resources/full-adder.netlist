@@ -16,7 +16,7 @@ entity fullAdder
 	component and2 gates.AndGate
 	component xor1 gates.XorGate
 	component xor2 gates.XorGate
-	component or   gates.XorGate
+	component or   gates.OrGate
 	
 	# wire up the components
 	

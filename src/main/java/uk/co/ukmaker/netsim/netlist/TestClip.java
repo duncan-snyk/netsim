@@ -21,7 +21,7 @@ public class TestClip<T extends Model> extends Device<T> {
 		super(model);
 	}
 
-	public void attach(Terminal deviceTerminal) {
+	public void attach(Terminal deviceTerminal) throws Exception {
 		Terminal clipTerminal = getTerminal("pin");
 		
 		// if both terminals already have a wire attached, we'll need to bridge them

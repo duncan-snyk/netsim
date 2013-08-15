@@ -43,6 +43,11 @@ public class Circuit implements Component {
 	public String getName() {
 		return name;
 	}
+	
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	@Override
 	public String getPath() {
@@ -59,7 +64,10 @@ public class Circuit implements Component {
 	}
 	
 	@Override
-	public Terminal getTerminal(String name) {
+	public Terminal getTerminal(String name) throws Exception {
+		if(!terminals.containsKey(name)) {
+			throw new Exception("Component "+getPath()+" has no terminal named "+name);
+		}
 		return terminals.get(name);
 	}
 	

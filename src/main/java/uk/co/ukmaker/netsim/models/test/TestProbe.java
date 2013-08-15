@@ -15,6 +15,7 @@ public class TestProbe extends Model {
 	
 	private Map<Long, SignalValue> expectedValues = new HashMap<Long, SignalValue>();
 
+	private boolean hasErrors = false;
 
 	public TestProbe(String name) {
 		super(name);
@@ -43,11 +44,14 @@ public class TestProbe extends Model {
 		
 		SignalValue expected = getExpectedValue(moment);
 		
+		hasErrors = false;
+		
 		if(expected != null) {
 			SignalValue actual = pin.getInputValue();
 			
 			if(!expected.equals(actual)) {
-				System.out.println("Test failure at "+moment+" = "+getName()+" expected "+expected+", but got "+actual);
+				hasErrors = true;
+				//System.out.println("Test failure at "+moment+" = "+getName()+" expected "+expected+", but got "+actual);
 			}
 		}
 		
@@ -62,6 +66,10 @@ public class TestProbe extends Model {
 	
 	public SignalValue getValue() {
 		return pin.getInputValue();
+	}
+	
+	public boolean hasErrors() {
+		return hasErrors;
 	}
 
 }

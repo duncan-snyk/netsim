@@ -3,7 +3,6 @@ package uk.co.ukmaker.netsim.netlist;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.co.ukmaker.netsim.Net;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 
@@ -37,10 +36,15 @@ public class Netlist {
 		return probes;
 	}
 	
-	public void propagateOutputEvents(long moment) {
+	public boolean propagateOutputEvents(long moment) {
+		
+		boolean propagated = false;
+		
 		for(Net n : nets) {
-			n.propagate(moment);
+			propagated = n.propagate(moment) ? true : propagated;
 		}
+		
+		return propagated;
 	}
 	
 	public void update(long moment) {

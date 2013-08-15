@@ -3,7 +3,6 @@ package uk.co.ukmaker.netsim.netlist;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.co.ukmaker.netsim.Net;
 
 /**
  * A base class for anything which can be attached to a Net

@@ -38,6 +38,10 @@ abstract public class Model {
 		return name;
 	}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	protected void addPin(Pin p) {
 		pins.put(p.getName(), p);
 	}
@@ -58,7 +62,6 @@ abstract public class Model {
 	 * @return
 	 */
 	public abstract void propagateOutputEvents(long moment);
-	
 	
 	public String getUnitName() {
 		return "U"+unit;

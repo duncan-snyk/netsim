@@ -35,7 +35,7 @@ public class XorGate extends Model {
 		// If either input is unknown, so will be the output
 		if(a.getInputValue().isUnknown() || b.getInputValue().isUnknown()) {
 			if(!q.getOutputValue().isX()) {
-				q.scheduleOutputValue(moment+1, X);
+				q.scheduleOutputValue(moment, X);
 			}
 			return;
 		}
@@ -43,13 +43,13 @@ public class XorGate extends Model {
 		// Real values lead to real answers
 		if(a.getInputValue().equals(b.getInputValue())) {
 			if(!q.getOutputValue().isZero()) {
-				q.scheduleOutputValue(moment+1, ZERO);
+				q.scheduleOutputValue(moment, ZERO);
 			}
 			return;
 		}
 		
 		if(!q.getOutputValue().isOne()) {
-			q.scheduleOutputValue(moment+1, ONE);
+			q.scheduleOutputValue(moment, ONE);
 		}
 	}
 	

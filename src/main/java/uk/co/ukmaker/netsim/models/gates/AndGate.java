@@ -31,15 +31,15 @@ public class AndGate extends Model {
 		// If either input is unknown, so will be the output
 		if(a.getInputValue().isUnknown() || b.getInputValue().isUnknown()) {
 			if(!q.getOutputValue().isX()) {
-				q.scheduleOutputValue(moment+1, SignalValue.X);
+				q.scheduleOutputValue(moment, SignalValue.X);
 			}
 		} else if(a.getInputValue().isOne() && b.getInputValue().isOne()) {
 			// Real values lead to real answers
 			if(!q.getOutputValue().isOne()) {
-				q.scheduleOutputValue(moment+1, SignalValue.ONE);
+				q.scheduleOutputValue(moment, SignalValue.ONE);
 			}
 		} else if(!q.getOutputValue().isZero()) {
-			q.scheduleOutputValue(moment+1, SignalValue.ZERO);
+			q.scheduleOutputValue(moment, SignalValue.ZERO);
 		}
 	}
 	
