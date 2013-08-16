@@ -1,0 +1,20 @@
+####
+# This netlist simply includes another and then references it
+####
+
+include simple-inverter.netlist
+
+entity wrapper
+
+  input wa
+  output wan
+  
+  ####
+  # Note the syntax using $ to refer to a user-defined component
+  ####
+  component inv $inverter
+  
+  net wa inv.a
+  net wan inv.an
+  
+; # End entity

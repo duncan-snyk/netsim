@@ -1,0 +1,17 @@
+####
+# Netlist describing an inverter
+####
+entity inverter
+
+	# declare inputs and outputs
+	input a
+	output an
+	
+	# declare components
+	component inv gates.Inverter
+	
+	# wire up the components
+	net  a inv.a
+	net  an inv.q
+	
+; # End of entity
