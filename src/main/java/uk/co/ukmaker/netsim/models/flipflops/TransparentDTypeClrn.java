@@ -37,26 +37,26 @@ public class TransparentDTypeClrn extends Model {
 		// If the clock or clrn is unknown, so will be the output
 		if(clk.getInputValue().isUnknown() || clrn.getInputValue().isUnknown()) {
 			if(!q.getOutputValue().isX() || !qn.getOutputValue().isX()) {
-				q.scheduleOutputValue(moment+1, SignalValue.X);
-				qn.scheduleOutputValue(moment+1, SignalValue.X);
+				q.scheduleOutputValue(moment, SignalValue.X);
+				qn.scheduleOutputValue(moment, SignalValue.X);
 			}
 		} else if(clrn.getInputValue().isZero()) {
 			if(q.getOutputValue().isNot(SignalValue.ZERO)) {
-				q.scheduleOutputValue(moment+1, SignalValue.ZERO);
-				qn.scheduleOutputValue(moment+1, SignalValue.ONE);
+				q.scheduleOutputValue(moment, SignalValue.ZERO);
+				qn.scheduleOutputValue(moment, SignalValue.ONE);
 			}
 		} else {
 			if(SignalValue.ZERO.equals(lastClk) && clk.getInputValue().isOne()) {
 				// hold the value if it has changed
 				if(!d.getInputValue().equals(q.getOutputValue())) {
-					q.scheduleOutputValue(moment+1, d.getInputValue());
-					qn.scheduleOutputValue(moment+1, d.getInputValue().not());
+					q.scheduleOutputValue(moment, d.getInputValue());
+					qn.scheduleOutputValue(moment, d.getInputValue().not());
 				}
 			} else if(clk.getInputValue().isZero()) {
 				// Output follows d while the clock is low
 				if(!d.getInputValue().equals(q.getOutputValue())) {
-					q.scheduleOutputValue(moment+1, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue());
-					qn.scheduleOutputValue(moment+1, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue().not());
+					q.scheduleOutputValue(moment, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue());
+					qn.scheduleOutputValue(moment, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue().not());
 				}
 			}
 		}

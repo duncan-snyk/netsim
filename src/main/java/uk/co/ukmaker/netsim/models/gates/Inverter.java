@@ -31,7 +31,7 @@ public class Inverter extends Model {
 		if(input.getInputValue().isUnknown()) {
 			
 			if(!output.getOutputValue().isX()) {
-				output.scheduleOutputValue(moment+1, SignalValue.X);
+				output.scheduleOutputValue(moment, SignalValue.X);
 			}
 			
 			return;
@@ -42,7 +42,7 @@ public class Inverter extends Model {
 			return;
 		}
 		
-		output.scheduleOutputValue(moment+1, input.getInputValue().not());
+		output.scheduleOutputValue(moment, input.getInputValue().not());
 	}
 	
 	public void propagateOutputEvents(long moment) {

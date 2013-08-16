@@ -35,21 +35,21 @@ public class TransparentDType extends Model {
 		// If the clock is unknown, so will be the output
 		if(clk.getInputValue().isUnknown()) {
 			if(!q.getOutputValue().isX() || !qn.getOutputValue().isX()) {
-				q.scheduleOutputValue(moment+1, SignalValue.X);
-				qn.scheduleOutputValue(moment+1, SignalValue.X);
+				q.scheduleOutputValue(moment, SignalValue.X);
+				qn.scheduleOutputValue(moment, SignalValue.X);
 			}
 		} else {
 			if(SignalValue.ZERO.equals(lastClk) && clk.getInputValue().isOne()) {
 				// hold the value if it has changed
 				if(!d.getInputValue().equals(q.getOutputValue())) {
-					q.scheduleOutputValue(moment+1, d.getInputValue());
-					qn.scheduleOutputValue(moment+1, d.getInputValue().not());
+					q.scheduleOutputValue(moment, d.getInputValue());
+					qn.scheduleOutputValue(moment, d.getInputValue().not());
 				}
 			} else if(clk.getInputValue().isZero()) {
 				// Output follows d while the clock is low
 				if(!d.getInputValue().equals(q.getOutputValue())) {
-					q.scheduleOutputValue(moment+1, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue());
-					qn.scheduleOutputValue(moment+1, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue().not());
+					q.scheduleOutputValue(moment, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue());
+					qn.scheduleOutputValue(moment, d.getInputValue().isUnknown() ? SignalValue.X : d.getInputValue().not());
 				}
 			}
 		}

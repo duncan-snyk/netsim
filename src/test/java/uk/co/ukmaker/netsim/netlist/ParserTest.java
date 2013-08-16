@@ -4,10 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
 
 import org.junit.Test;
+
+import uk.co.ukmaker.netsim.parser.Parser;
 
 public class ParserTest {
 	
@@ -104,5 +107,23 @@ public class ParserTest {
 
 		assertEquals(4, adder.getComponents().size());
 		assertEquals(14, adder.getTerminals().size());
+	}
+	
+	@Test
+	public void shouldParseSimulation() throws Exception {
+		URL r = ParserTest.class.getClassLoader().getResource("adder.sim");
+		File f = new File(r.getFile());
+		FileInputStream netlist = new FileInputStream(f);
+		
+		Parser p = new Parser();
+		p.setBaseDir(f.getParentFile());
+		p.parse(netlist);
+		
+		Component adder = p.getEntity();
+
+		assertEquals(24, adder.getComponents().size());
+		
+		// TestFixtures should have no outside terminals
+		assertEquals(0, adder.getTerminals().size());
 	}
 }

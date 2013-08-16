@@ -9,6 +9,8 @@ import java.net.URL;
 
 import org.junit.Test;
 
+import uk.co.ukmaker.netsim.parser.Parser;
+
 public class CompilerTest {
 	
 	@Test

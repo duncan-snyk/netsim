@@ -3,11 +3,13 @@ package uk.co.ukmaker.netsim.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Circuit;
 import uk.co.ukmaker.netsim.netlist.CompilationException;
 import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Netlist;
+import uk.co.ukmaker.netsim.netlist.TestFixture;
 
 public class Simulation {
 
@@ -30,6 +32,14 @@ public class Simulation {
 		Compiler compiler = new Compiler();
 		netlist = compiler.compile(circuit);
 		this.probes = netlist.getTestProbes();
+		generateFormats();
+	}
+	
+	public Simulation(TestFixture fixture) throws CompilationException {
+		Compiler compiler = new Compiler();
+		netlist = compiler.compile(fixture);
+		this.probes = fixture.getTestProbes();
+		
 		generateFormats();
 	}
 	
@@ -99,7 +109,8 @@ public class Simulation {
 				i=0;
 				sb.append(String.format("\n%9s ", "ERROR"));
 				for (TestProbe probe : probes) {
-					sb.append(String.format(formats.get(i++), probe.getExpectedValue(moment)));
+					SignalValue v = probe.getExpectedValue(moment);
+					sb.append(String.format(formats.get(i++), v == null ? "" : v));
 				}
 			}
 			System.out.println(sb.toString());

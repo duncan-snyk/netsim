@@ -2,11 +2,17 @@ package uk.co.ukmaker.netsim;
 
 public enum SignalValue {
 	
-	Z,
-	ZERO,
-	ONE,
-	X
+	Z("Z"),
+	ZERO("0"),
+	ONE("1"),
+	X("X")
 	;
+	
+	private String v;
+	
+	private SignalValue(String v) {
+		this.v = v;
+	}
 	
 	
 	public boolean isX() {
@@ -43,5 +49,23 @@ public enum SignalValue {
 		}
 		
 		return X;
+	}
+	
+	public static SignalValue fromInt(int i) throws Exception {
+		if(i == 0) return ZERO;
+		if(i == 1) return ONE;
+		throw new Exception("Illegal value for fromInt - "+i);
+	}
+	
+	public static SignalValue fromChar(char c) throws Exception {
+		if(c == '0') return ZERO;
+		if(c == '1') return ONE;
+		if(c == 'Z' || c == 'z') return Z;
+		if(c == 'X' || c == 'x') return X;
+		throw new Exception("Illegal value for fromChar - "+c);
+	}
+	
+	public String toString() {
+		return v;
 	}
 }

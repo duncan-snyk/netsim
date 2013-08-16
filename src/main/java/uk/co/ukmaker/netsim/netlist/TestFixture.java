@@ -1,44 +1,36 @@
-package uk.co.ukmaker.netsim.simulation;
+package uk.co.ukmaker.netsim.netlist;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.test.SequenceGenerator;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
-import uk.co.ukmaker.netsim.netlist.Circuit;
-import uk.co.ukmaker.netsim.netlist.Component;
-import uk.co.ukmaker.netsim.netlist.ParserTest;
-import uk.co.ukmaker.netsim.netlist.TestClip;
 import uk.co.ukmaker.netsim.parser.Parser;
 
-abstract public class TestHarness {
+public class TestFixture extends Circuit {
 	
 	protected List<TestClip> testClips = new ArrayList<TestClip>();
 	protected List<TestProbe> testProbes = new ArrayList<TestProbe>();
+	
+	protected Map<String, TestClip> testClipMap = new HashMap<String, TestClip>();
 	protected long moment = 0;
 	
-	protected Component component;
-	protected Circuit circuit;
+	protected Component deviceUnderTest;
+
+
+	public TestFixture(Component parentComponent, String name) {
+		super(parentComponent, name);
+	}
 	
-	public void loadNetlist(String name) throws Exception {
-		URL r = ParserTest.class.getClassLoader().getResource(name);
-		File f = new File(r.getFile());
-		FileInputStream netlistsrc = new FileInputStream(f);
-		
-		Parser p = new Parser();
-		p.setBaseDir(f.getParentFile());
-		p.parse(netlistsrc);
-		
-		component = p.getEntity();
-		
-		// Construct a simple circuit and test it
-		// This will be a half-adder
-		circuit = new Circuit("TestFixture");
-		circuit.addComponent(component);
+	public TestFixture(String name) {
+		this(null, name);
+	}
+	
+	public void setDeviceUnderTest(Component deviceUnderTest) {
+		this.deviceUnderTest = deviceUnderTest;
 	}
 	
 	public void inject(String name, String terminalName) throws Exception {
@@ -52,14 +44,15 @@ abstract public class TestHarness {
 		for(int i=names.length-1; i>=0;  i--) {
 			
 			TestClip<SequenceGenerator> clip = new TestClip<SequenceGenerator>(names[i], new SequenceGenerator());
-			clip.attach(component.getTerminal(terminalNames[i]));
+			clip.attach(deviceUnderTest.getTerminal(terminalNames[i]));
 			testClips.add(clip);
-			circuit.addComponent(clip);
+			testClipMap.put(clip.getName(), clip);
+			addComponent(clip);
 	
 			TestClip<TestProbe> pclip = new TestClip<TestProbe>(new TestProbe("p"+names[i]));
-			pclip.attach(component.getTerminal(terminalNames[i]));
+			pclip.attach(deviceUnderTest.getTerminal(terminalNames[i]));
 			testProbes.add(pclip.getModel());
-			circuit.addComponent(pclip);
+			addComponent(pclip);
 		}
 	}
 	
@@ -73,10 +66,11 @@ abstract public class TestHarness {
 		
 		for(int i=names.length-1; i>=0;  i--) {
 			
-			TestClip<TestProbe> clip = new TestClip<TestProbe>(new TestProbe("p"+names[i]));
-			clip.attach(component.getTerminal(terminalNames[i]));
+			TestClip<TestProbe> clip = new TestClip<TestProbe>(new TestProbe(names[i]));
+			clip.attach(deviceUnderTest.getTerminal(terminalNames[i]));
 			testClips.add(clip);
-			circuit.addComponent(clip);
+			testClipMap.put(clip.getName(), clip);
+			addComponent(clip);
 			
 			testProbes.add(clip.getModel());
 		}
@@ -96,5 +90,29 @@ abstract public class TestHarness {
 		}
 		
 		moment++;
+	}
+	
+	public TestClip getTestClip(String name) {
+		return testClipMap.get(name);
+	}
+	
+	public void generate(long moment, String  clipName, SignalValue value) {
+		((SequenceGenerator)getTestClip(clipName).getModel()).addValue(moment, value);
+	}
+	
+	public void expect(long moment, String  clipName, SignalValue value) {
+		((TestProbe)getTestClip(clipName).getModel()).expect(moment, value);
+	}
+	
+	public long getEndMoment() {
+		return moment;
+	}
+	
+	public void setEndMoment(long moment) {
+		this.moment = moment;
+	}
+	
+	public List<TestProbe> getTestProbes() {
+		return testProbes;
 	}
 }
