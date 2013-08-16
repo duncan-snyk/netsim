@@ -2,15 +2,17 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>uk.co.ukmaker</groupId>
-  <artifactId>netsim</artifactId>
+  <groupId>uk.co.ukmaker.netsim</groupId>
+  <artifactId>netsim-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
 
-  <name>Netlist Simulator</name>
-  <url>http://maven.apache.org</url>
+  <packaging>pom</packaging>
+
+  <name>Netlist Simulator Parent</name>
+  <url>http://github.com/duncanFrance/netsim</url>
 
   <properties>
+<rabbit.client.version>2.7.1</rabbit.client.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   	<maven.compiler.source>1.7</maven.compiler.source>
   	<maven.compiler.target>1.7</maven.compiler.target>
@@ -18,13 +20,22 @@
   	<downloadJavadocs>true</downloadJavadocs>
   </properties>
 
+<modules>
+	<module>core</module>
+	<module>amqp</module>
+</modules>
+
   <dependencies>
   <dependency>
     <groupId>com.google.guava</groupId>
     <artifactId>guava</artifactId>
     <version>14.0.1</version>
 </dependency>
-  
+ 		<dependency>
+			<groupId>com.rabbitmq</groupId>
+			<artifactId>amqp-client</artifactId>
+			<version>${rabbit.client.version}</version>
+		</dependency> 
   
     <dependency>
       <groupId>junit</groupId>

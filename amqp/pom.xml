@@ -8,10 +8,10 @@
   <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>core</artifactId>
+  <artifactId>amqp</artifactId>
   <packaging>jar</packaging>
 
-  <name>Netlist Simulator</name>
+  <name>Netlist Simulator AMQP Support</name>
   <url>http://github.com/duncanFrance/netsim</url>
 
   <properties>
