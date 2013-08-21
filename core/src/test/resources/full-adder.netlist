@@ -9,7 +9,7 @@ entity fullAdder
 	input cin
 	
 	output sum
-	output carry
+	output cout
 	
 	# declare components
 	component and1 gates.AndGate
@@ -32,6 +32,6 @@ entity fullAdder
 	
 	# Outputs
 	net  sum xor2.q
-	net  carry or.q
+	net  cout or.q
 	
 ; # End of entity

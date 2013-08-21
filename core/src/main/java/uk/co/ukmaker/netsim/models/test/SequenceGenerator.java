@@ -3,16 +3,19 @@ package uk.co.ukmaker.netsim.models.test;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.co.ukmaker.netsim.ScheduledValue;
+import uk.co.ukmaker.netsim.ScheduledValueQueue;
 import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.OutputPin;
-import uk.co.ukmaker.netsim.pins.Output;
 
 public class SequenceGenerator extends Model {
 	
 	private final OutputPin pin = new OutputPin(this, "pin");
 	
-	private Map<Long, SignalValue> values = new HashMap<Long, SignalValue>();
+	private ScheduledValueQueue values = new ScheduledValueQueue();
+	
+	private ScheduledValue last;
 	
 	public SequenceGenerator(String name) {
 		super(name);
@@ -24,34 +27,38 @@ public class SequenceGenerator extends Model {
 	}
 	
 	public void addValue(long moment, SignalValue value) {
-		values.put(moment, value);
+		values.schedule(new ScheduledValue(moment, value));
 	}
 
-	public SignalValue getValue(long moment) {
-		
-		if(values.containsKey(moment)) {
-			return values.get(moment);
-		}
-		
-		return null;
-	}
-	
 
 	@Override
 	public void update(long moment) {
 		
-		SignalValue v = getValue(moment+1);
+		ScheduledValue next;
 		
-		if(v != null) {
-			if(!v.equals(pin.getOutputValue())) {
-				pin.scheduleOutputValue(moment+1, v);
+		if(last == null) {
+			// If we haven't scheduled a value yet, schedule the first one from the list
+			// so the simulation can start properly
+			next = values.useHead();
+		} else {
+			
+			if(last.getMoment() > moment) {
+				return;
+			}
+			
+			while((next = values.useHead()) != null) {
+				if(!next.getValue().equals(last.getValue())) {
+					break;
+				}
+				// dump things with the same value
 			}
 		}
-	}
-
-	@Override
-	public void propagateOutputEvents(long moment) {
-		pin.propagateOutputValue(moment);
+		
+		
+		if(next != null) {
+			pin.scheduleOutputValue(next.getMoment(), next.getValue());
+			last = next;
+		}
 	}
 
 	@Override

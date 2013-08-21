@@ -2,16 +2,15 @@ package uk.co.ukmaker.netsim.models.gates;
 
 import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.Model;
-import uk.co.ukmaker.netsim.pins.Input;
-import uk.co.ukmaker.netsim.pins.Input;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.OutputPin;
-import uk.co.ukmaker.netsim.pins.Output;
 
 public class Inverter extends Model {
 	
 	private final InputPin input   = new InputPin(this, "a");
 	private final OutputPin output = new OutputPin(this, "q");
+	
+	private long tpd = 10000;
 	
 	public Inverter(String name) {
 		
@@ -27,11 +26,15 @@ public class Inverter extends Model {
 	@Override
 	public void update(long moment) {
 		
+		if(!needsUpdate(moment)) {
+			return;
+		}
+		
 		// An unknown input always gives rise to an unknown output
-		if(input.getInputValue().isUnknown()) {
+		if(input.useInputValue(moment).isUnknown()) {
 			
 			if(!output.getOutputValue().isX()) {
-				output.scheduleOutputValue(moment, SignalValue.X);
+				output.scheduleOutputValue(moment+tpd, SignalValue.X);
 			}
 			
 			return;
@@ -42,11 +45,6 @@ public class Inverter extends Model {
 			return;
 		}
 		
-		output.scheduleOutputValue(moment, input.getInputValue().not());
+		output.scheduleOutputValue(moment+tpd, input.getInputValue().not());
 	}
-	
-	public void propagateOutputEvents(long moment) {
-		output.propagateOutputValue(moment);
-	}
-
 }

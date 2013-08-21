@@ -5,8 +5,6 @@ import java.util.Map;
 
 import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.Model;
-import uk.co.ukmaker.netsim.pins.Input;
-import uk.co.ukmaker.netsim.pins.Input;
 import uk.co.ukmaker.netsim.pins.InputPin;
 
 public class TestProbe extends Model {
@@ -43,24 +41,17 @@ public class TestProbe extends Model {
 	public void update(long moment) {
 		
 		SignalValue expected = getExpectedValue(moment);
+		SignalValue actual = pin.useInputValue(moment);
 		
 		hasErrors = false;
 		
 		if(expected != null) {
-			SignalValue actual = pin.getInputValue();
 			
 			if(!expected.equals(actual)) {
 				hasErrors = true;
 				//System.out.println("Test failure at "+moment+" = "+getName()+" expected "+expected+", but got "+actual);
 			}
 		}
-		
-	}
-
-	@Override
-	public void propagateOutputEvents(long moment) {
-		
-		// Nothing to do. A probe has no output (yet!)
 		
 	}
 	

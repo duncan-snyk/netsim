@@ -1,0 +1,24 @@
+###
+# Simulation test case for a single inverter
+###
+
+include simple-inverter.netlist
+
+simulate inverter
+
+	source a
+
+	probe an
+	
+	generate a
+	expect   an 
+	
+	@0     0 X
+	@10000 0 1
+	@20000 1 1
+	@30000 0 0
+	@40000 0 1
+	@50000 1 1
+	@60000 1 0
+			
+; # end simulation

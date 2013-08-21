@@ -5,7 +5,8 @@ public enum SignalValue {
 	Z("Z"),
 	ZERO("0"),
 	ONE("1"),
-	X("X")
+	X("X"),
+	N("N") // no-change
 	;
 	
 	private String v;
@@ -29,6 +30,10 @@ public enum SignalValue {
 	
 	public boolean isZero() {
 		return this.equals(ZERO);
+	}
+	
+	public boolean isNoChange() {
+		return this.equals(N);
 	}
 	
 	public boolean isUnknown() {
@@ -62,6 +67,7 @@ public enum SignalValue {
 		if(c == '1') return ONE;
 		if(c == 'Z' || c == 'z') return Z;
 		if(c == 'X' || c == 'x') return X;
+		if(c == 'N' || c == 'n') return N;
 		throw new Exception("Illegal value for fromChar - "+c);
 	}
 	

@@ -10,12 +10,12 @@ import java.util.List;
 
 import org.junit.Test;
 
-import uk.co.ukmaker.netsim.models.ComponentTest;
+import uk.co.ukmaker.netsim.models.ModelTest;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.OutputPin;
 
-public class TransparentDTypeTest extends ComponentTest {
+public class TransparentDTypeTest extends ModelTest {
 	
 	private InputPin d;
 	private InputPin clk;
@@ -52,7 +52,7 @@ public class TransparentDTypeTest extends ComponentTest {
 	@Test
 	public void shouldIgnoreDWhenClkHigh() {
 		
-		expect(X, X, X, X);
+		expect(X, null, X, null);
 
 		// Set to known values to start
 		apply(ZERO, ZERO);
@@ -75,7 +75,7 @@ public class TransparentDTypeTest extends ComponentTest {
 	@Test
 	public void shouldFollowDWhenClkLow() {
 		
-		expect(X, X, X, X);
+		expect(X, null, X, null);
 
 		// Set to known values to start
 		apply(ZERO, ZERO);

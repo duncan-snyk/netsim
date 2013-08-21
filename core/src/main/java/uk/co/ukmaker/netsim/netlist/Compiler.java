@@ -1,9 +1,7 @@
 package uk.co.ukmaker.netsim.netlist;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
@@ -61,14 +59,19 @@ public class Compiler {
 			if(w == null) {
 				throw new CompilationException("No external wire attached to terminal "+component.getPath()+"_"+t.getName());
 			}
-			//if(!w.isNetted()) {
-				Model m = getDeviceModel((Device)component);
-				Pin p = m.getPins().get(t.getName());
-				net.addPin(p);
-				// follow other terminals attached to this wire
-				w.setNetted(true);
-				netlist(w, net);
-			//}
+
+			Model m = getDeviceModel((Device)component);
+			Pin p = m.getPins().get(t.getName());
+			
+			if(p.getNet() != null) {
+				throw new CompilationException("Attempting to wire a pin twice");
+			}
+			net.addPin(p);
+
+			// follow other terminals attached to this wire
+			w.setNetted(true);
+			netlist(w, net);
+
 		} else {
 			netlist(t.getExternalWire(), net);
 			netlist(t.getInternalWire(), net);

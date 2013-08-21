@@ -24,21 +24,21 @@ entity adderSlice
 	net b0 fa0.b
 	net sum0 fa0.sum
 	
-	net fa0.carry fa1.cin
+	net fa0.cout fa1.cin
 	net a1 fa1.a
 	net b1 fa1.b
 	net sum1 fa1.sum
 	
-	net fa1.carry fa2.cin
+	net fa1.cout fa2.cin
 	net a2 fa2.a
 	net b2 fa2.b
 	net sum2 fa2.sum
 	
-	net fa2.carry fa3.cin
+	net fa2.cout fa3.cin
 	net a3 fa3.a
 	net b3 fa3.b
 	net sum3 fa3.sum
 	
-	net cout fa3.carry
+	net cout fa3.cout
 	
 ; # end entity

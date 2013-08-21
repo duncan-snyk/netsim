@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.netlist.Component;
-import uk.co.ukmaker.netsim.netlist.Terminal;
+import uk.co.ukmaker.netsim.pins.InputPin;
+import uk.co.ukmaker.netsim.pins.OutputPin;
 import uk.co.ukmaker.netsim.pins.Pin;
 
 /**
@@ -28,6 +28,8 @@ abstract public class Model {
 	protected String name;
 	
 	protected Map<String, Pin> pins = new HashMap<String, Pin>();
+	protected List<InputPin> inputs = new ArrayList<InputPin>();
+	protected List<OutputPin> outputs = new ArrayList<OutputPin>();
 	
 	public Model(String name) {
 		unit = u++;
@@ -44,27 +46,70 @@ abstract public class Model {
 	
 	protected void addPin(Pin p) {
 		pins.put(p.getName(), p);
+		if(p instanceof InputPin) {
+			inputs.add((InputPin)p);
+		} else {
+			outputs.add((OutputPin)p);
+		}
 	}
 	
 	public Map<String, Pin> getPins() {
 		return pins;
 	}
 	
+	public List<OutputPin> getOutputPins() {
+		return outputs;
+	}
+	
 	/**
 	 * Ask the Component to run its behaviour at the given moment
+	 * 
+	 * It should use its input values and may schedule new events on its output pins
 	 * 
 	 * @param moment
 	 */
 	public abstract void update(long moment);
 	
-	/**
-	 * Ask the Component to propagate any scheduled values to its outputs
-	 * @return
-	 */
-	public abstract void propagateOutputEvents(long moment);
+	public void useInputValues(long moment) {
+		for(InputPin p : inputs) {
+			p.useInputValue(moment);
+		}
+	}
+	
+	public boolean needsUpdate(long moment) {
+		
+		boolean needsUpdate = false;
+		
+		for(InputPin p : inputs) {
+			if(p.hasScheduledValue(moment)) {
+				needsUpdate=true;
+			}
+			p.useInputValue(moment);
+		}
+		
+		return needsUpdate;
+	}
+	
+	public Long getNextScheduleMoment() {
+		Long next = null;
+		for(OutputPin p : outputs) {
+			Long pnext = p.getNextScheduleMoment();
+			if(next == null) {
+				next = pnext;
+			} else if(pnext != null && (pnext < next)) {
+				next = pnext;
+			}
+		}
+		
+		return next;
+	}
 	
 	public String getUnitName() {
 		return "U"+unit;
+	}
+
+	public Pin getPin(String pinName) {
+		return pins.get(pinName);
 	}
 
 }

@@ -1,7 +1,6 @@
 package uk.co.ukmaker.netsim.netlist;
 
 import java.util.Collection;
-import java.util.List;
 
 
 

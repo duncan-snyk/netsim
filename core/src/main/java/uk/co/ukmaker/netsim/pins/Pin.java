@@ -1,7 +1,7 @@
 package uk.co.ukmaker.netsim.pins;
 
 import uk.co.ukmaker.netsim.models.Model;
-import uk.co.ukmaker.netsim.netlist.Terminal;
+import uk.co.ukmaker.netsim.netlist.Net;
 
 abstract public class Pin {
 	
@@ -10,7 +10,7 @@ abstract public class Pin {
 	 */
 	private final Model model;
 	private final String name;
-	
+	private Net net;
 	/**
 	 * The list of nets 
 	 * @param model
@@ -32,6 +32,14 @@ abstract public class Pin {
 	
 	public String getPath() {
 		return getComponent().getName()+"_"+getName();
+	}
+	
+	public void setNet(Net n) {
+		net = n;
+	}
+	
+	public Net getNet() {
+		return net;
 	}
 
 }

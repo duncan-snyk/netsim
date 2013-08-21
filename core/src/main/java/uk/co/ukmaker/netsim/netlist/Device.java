@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.Pin;
+
+import com.google.common.collect.Lists;
 
 
 public class Device<T extends Model> implements Component {

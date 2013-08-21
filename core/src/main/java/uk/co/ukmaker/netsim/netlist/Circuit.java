@@ -1,17 +1,8 @@
 package uk.co.ukmaker.netsim.netlist;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import com.google.common.collect.Lists;
-
-import uk.co.ukmaker.netsim.pins.Input;
-import uk.co.ukmaker.netsim.pins.Output;
 
 /**
  * A Circuit is a user-defined Component built from a netlist of Components

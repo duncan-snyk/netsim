@@ -1,9 +1,12 @@
 package uk.co.ukmaker.netsim.netlist;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import uk.co.ukmaker.netsim.SignalValue;
+import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.Input;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.Output;
@@ -26,6 +29,9 @@ public class Net {
 	
 	private List<InputPin> sinks = new ArrayList<InputPin>();
 	private List<OutputPin> sources = new ArrayList<OutputPin>();
+	private Set<Model> sourceModels = new HashSet<Model>();
+	private Set<Model> sinkModels = new HashSet<Model>();
+	private Set<Model> models = new HashSet<Model>();
 	
 	public Net(final String id) {
 		this.id = id;
@@ -39,11 +45,15 @@ public class Net {
 		
 		if(p instanceof InputPin) {
 			sinks.add((InputPin)p);
+			sinkModels.add(p.getComponent());
 		}
 		
 		if(p instanceof OutputPin) {
 			sources.add((OutputPin)p);
+			sourceModels.add(p.getComponent());
 		}
+		models.add(p.getComponent());
+		p.setNet(this);
 	}
 	
 	public List<InputPin> getSinks() {
@@ -54,52 +64,16 @@ public class Net {
 		return sources;
 	}
 	
-	/**
-	 * Propagate signals from sources to sinks
-	 * If a source has a scheduled event, then there is something to propagate,
-	 * otherwise nothing need be done. Note that this implies that all sources
-	 * *must* schedule an event at t=0 to kick-start the system
-	 * 
-	 * Returns true if an event was propagated
-	 */
-	public boolean propagate(long moment) {
-		
-		SignalValue sv = null;
-		SignalValue toPropagate = null;
-		
-		if(sources.size() == 0) {
-			toPropagate = SignalValue.X;
-		} else {
-			for(Output p : sources) {
-				
-				sv = p.getScheduledOutputValue(moment);
-				p.propagateOutputValue(moment);
-				
-				if(sv != null) {
-					
-					if(toPropagate == null) {
-						toPropagate = sv;
-					} else if(toPropagate.isZ()) {
-						toPropagate = sv;
-					} else {
-						toPropagate = SignalValue.X;
-					}
-				}
-			}
-		}
-		
-		if(toPropagate != null) {
-			// Now apply the signal to all the sinks
-			for(Input p : sinks) {
-				p.setInputValue(moment, toPropagate);
-			}
-			
-			v = toPropagate;
-			
-			return true;
-		}
-		
-		return false;
+	public Set<Model> getSourceModels() {
+		return sourceModels;
+	}
+	
+	public Set<Model> getSinkModels() {
+		return sinkModels;
+	}
+	
+	public Set<Model> getModels() {
+		return models;
 	}
 	
 	public String toString() {
@@ -113,5 +87,11 @@ public class Net {
 		}
 		
 		return sb.toString();
+	}
+
+	public void await(long moment, int numDrivers) {
+		for(InputPin p : getSinks()) {
+			p.await(moment, numDrivers);
+		}
 	}
 }

@@ -10,7 +10,10 @@ import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.test.SequenceGenerator;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Circuit;
+import uk.co.ukmaker.netsim.netlist.CompilationException;
+import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Component;
+import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.netlist.ParserTest;
 import uk.co.ukmaker.netsim.netlist.TestClip;
 import uk.co.ukmaker.netsim.parser.Parser;
@@ -23,6 +26,9 @@ abstract public class TestHarness {
 	
 	protected Component component;
 	protected Circuit circuit;
+	protected Netlist netlist;
+	
+	protected long propagationDelay = 10000;
 	
 	public void loadNetlist(String name) throws Exception {
 		URL r = ParserTest.class.getClassLoader().getResource(name);
@@ -39,6 +45,17 @@ abstract public class TestHarness {
 		// This will be a half-adder
 		circuit = new Circuit("TestFixture");
 		circuit.addComponent(component);
+	}
+	
+	public LocalSimulator getSimulator() throws CompilationException {
+		
+		Compiler c = new Compiler();
+		
+		netlist = c.compile(circuit);
+		
+		LocalSimulator sim = new LocalSimulator();
+		
+		return sim;
 	}
 	
 	public void inject(String name, String terminalName) throws Exception {
@@ -95,6 +112,6 @@ abstract public class TestHarness {
 			}
 		}
 		
-		moment++;
+		moment+= propagationDelay;
 	}
 }

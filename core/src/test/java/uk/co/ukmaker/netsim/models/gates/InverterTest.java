@@ -9,14 +9,14 @@ import java.util.List;
 
 import org.junit.Test;
 
-import uk.co.ukmaker.netsim.models.ComponentTest;
+import uk.co.ukmaker.netsim.models.ModelTest;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.OutputPin;
 
 import com.google.common.collect.Lists;
 
-public class InverterTest extends ComponentTest {
+public class InverterTest extends ModelTest {
 	
 	Inverter gate;
 	InputPin a;
@@ -49,7 +49,7 @@ public class InverterTest extends ComponentTest {
 	@Test
 	public void testLogic() {
 		
-		expect(X, X);
+		expect(X, null);
 		
 		apply(X);
 		expect(X, null);

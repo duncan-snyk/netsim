@@ -1,5 +1,6 @@
 package uk.co.ukmaker.netsim.pins;
 
+import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.SignalValue;
 
 public interface Output {
@@ -15,11 +16,16 @@ public interface Output {
 	 */
 	public SignalValue getScheduledOutputValue(long moment);
 	
+	/**
+	 * Return the moment at which the next change is scheduled if there is one, or null if no change is scheduled
+	 */
+	public Long getNextScheduleMoment();
+	
 	public void scheduleOutputValue(long scheduledMoment, SignalValue value);
 	
 	/**
-	 * Update the current value if needed
+	 * Remove the signal value from the output and return it
 	 */
-	public void propagateOutputValue(long moment);
+	public ScheduledValue useScheduledOutputValue(long moment);
 
 }

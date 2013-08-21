@@ -1,13 +1,13 @@
 package uk.co.ukmaker.netsim.simulation;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -22,6 +22,10 @@ import uk.co.ukmaker.netsim.netlist.TestFixture;
 import uk.co.ukmaker.netsim.parser.Parser;
 
 public class SimulatorTest {
+	
+	public long t(long b) {
+		return b * 100000;
+	}
 	
 	
 	@Test
@@ -41,21 +45,21 @@ public class SimulatorTest {
 		
 	
 		TestClip<SequenceGenerator> seqa = new TestClip<SequenceGenerator>("Ain", new SequenceGenerator());
-		seqa.getModel().addValue(0, SignalValue.X);
-		seqa.getModel().addValue(1, SignalValue.ZERO);
-		seqa.getModel().addValue(2, SignalValue.ONE);
-		seqa.getModel().addValue(3, SignalValue.ZERO);
-		seqa.getModel().addValue(4, SignalValue.ONE);
+		seqa.getModel().addValue(t(0), SignalValue.X);
+		seqa.getModel().addValue(t(1), SignalValue.ZERO);
+		seqa.getModel().addValue(t(2), SignalValue.ONE);
+		seqa.getModel().addValue(t(3), SignalValue.ZERO);
+		seqa.getModel().addValue(t(4), SignalValue.ONE);
 		
 		seqa.attach(halfAdder.getTerminal("a"));
 
 		
 		TestClip<SequenceGenerator> seqb = new TestClip<SequenceGenerator>("Bin", new SequenceGenerator());
-		seqb.getModel().addValue(0, SignalValue.X);
-		seqb.getModel().addValue(1, SignalValue.ZERO);
-		seqb.getModel().addValue(2, SignalValue.ZERO);
-		seqb.getModel().addValue(3, SignalValue.ONE);
-		seqb.getModel().addValue(4, SignalValue.ONE);
+		seqb.getModel().addValue(t(0), SignalValue.X);
+		seqb.getModel().addValue(t(1), SignalValue.ZERO);
+		seqb.getModel().addValue(t(2), SignalValue.ZERO);
+		seqb.getModel().addValue(t(3), SignalValue.ONE);
+		seqb.getModel().addValue(t(4), SignalValue.ONE);
 
 		seqb.attach(halfAdder.getTerminal("b"));
 		
@@ -65,25 +69,23 @@ public class SimulatorTest {
 		b.attach(halfAdder.getTerminal("b"));
 		
 		TestClip<TestProbe> sum = new TestClip<TestProbe>(new TestProbe("SUM"));
-		sum.getModel().expect(0, SignalValue.X);
-		sum.getModel().expect(1, SignalValue.X);
-		sum.getModel().expect(2, SignalValue.ZERO);
-		sum.getModel().expect(3, SignalValue.ONE);
-		sum.getModel().expect(4, SignalValue.ONE);
-		sum.getModel().expect(5, SignalValue.ZERO);
-		sum.getModel().expect(6, SignalValue.ZERO);
-		sum.getModel().expect(7, SignalValue.ZERO);
+		sum.getModel().expect(t(0), SignalValue.X);
+		sum.getModel().expect(t(1), SignalValue.ZERO);
+		sum.getModel().expect(t(2), SignalValue.ONE);
+		sum.getModel().expect(t(3), SignalValue.ONE);
+		sum.getModel().expect(t(4), SignalValue.ZERO);
+		sum.getModel().expect(t(5), SignalValue.ZERO);
+		sum.getModel().expect(t(6), SignalValue.ZERO);
 		sum.attach(halfAdder.getTerminal("sum"));
 
 		TestClip<TestProbe> carry = new TestClip<TestProbe>(new TestProbe("CARRY"));
-		carry.getModel().expect(0, SignalValue.X);
-		carry.getModel().expect(1, SignalValue.X);
-		carry.getModel().expect(2, SignalValue.ZERO);
-		carry.getModel().expect(3, SignalValue.ZERO);
-		carry.getModel().expect(4, SignalValue.ZERO);
-		carry.getModel().expect(5, SignalValue.ONE);
-		carry.getModel().expect(6, SignalValue.ONE);
-		carry.getModel().expect(7, SignalValue.ONE);
+		carry.getModel().expect(t(0), SignalValue.X);
+		carry.getModel().expect(t(1), SignalValue.ZERO);
+		carry.getModel().expect(t(2), SignalValue.ZERO);
+		carry.getModel().expect(t(3), SignalValue.ZERO);
+		carry.getModel().expect(t(4), SignalValue.ONE);
+		carry.getModel().expect(t(5), SignalValue.ONE);
+		carry.getModel().expect(t(6), SignalValue.ONE);
 		carry.attach(halfAdder.getTerminal("carry"));
 		
 
@@ -94,9 +96,14 @@ public class SimulatorTest {
 		circuit.addComponent(a);
 		circuit.addComponent(b);
 		
+		List<TestProbe> probes = new ArrayList<TestProbe>();
+		probes.add(a.getModel());
+		probes.add(b.getModel());
+		probes.add(sum.getModel());
+		probes.add(carry.getModel());
 		
-		Simulation sim = new Simulation(circuit);
-		sim.simulate(10);
+		LocalSimulatorNode sim = new LocalSimulatorNode(circuit, probes);
+		sim.simulate(t(7));
 		
 		assertFalse(sum.getModel().hasErrors());
 		assertFalse(carry.getModel().hasErrors());
@@ -114,7 +121,7 @@ public class SimulatorTest {
 		
 		TestFixture testFixture = (TestFixture)p.getEntity();
 		
-		Simulation sim = new Simulation(testFixture);
+		LocalSimulatorNode sim = new LocalSimulatorNode(testFixture);
 		sim.simulate(testFixture.getEndMoment());
 
 	}

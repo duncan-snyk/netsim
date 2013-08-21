@@ -15,8 +15,18 @@ public interface Input {
 	public SignalValue getInputValue();
 	
 	/**
-	 * Set a new value on the input.
+	 * Returns the current value on the input
 	 */
-	public void setInputValue(long moment, SignalValue value);
+	public SignalValue useInputValue(long moment);
+	
+	/**
+	 * Schedule a new value on the input.
+	 */
+	public void scheduleInputValue(long moment, SignalValue value);
+	
+	public boolean hasScheduledValue(long moment);
+	public boolean hasScheduledValue(long moment, int drivers);
+
+	public void await(long moment, int drivers);
 
 }

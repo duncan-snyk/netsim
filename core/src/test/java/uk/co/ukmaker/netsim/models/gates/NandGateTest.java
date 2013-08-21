@@ -25,7 +25,7 @@ public class NandGateTest extends TwoInputGateTest {
 	@Test
 	public void testLogic() {
 		
-		expect(X, X);
+		expect(X, null);
 		
 		check(ZERO, ZERO, X, ONE);
 		check(ZERO, ONE, ONE, null);

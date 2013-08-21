@@ -5,12 +5,12 @@ import static com.google.common.collect.Lists.newArrayList;
 import java.util.List;
 
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.models.ComponentTest;
+import uk.co.ukmaker.netsim.models.ModelTest;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.OutputPin;
 
-abstract public class TwoInputGateTest extends ComponentTest {
+abstract public class TwoInputGateTest extends ModelTest {
 	
 	protected Model gate;
 	protected InputPin a;

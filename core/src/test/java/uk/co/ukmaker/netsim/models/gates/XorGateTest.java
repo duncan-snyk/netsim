@@ -26,7 +26,7 @@ public class XorGateTest extends TwoInputGateTest {
 	@Test
 	public void testLogic() {
 		
-		expect(X, X);
+		expect(X, null);
 		
 		check(ZERO, ZERO, X, ZERO);
 		check(ZERO, ONE, ZERO, ONE);

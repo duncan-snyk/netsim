@@ -1,13 +1,27 @@
 package uk.co.ukmaker.netsim.parser;
 
-import static uk.co.ukmaker.netsim.parser.Parser.State.*;
-
+import static uk.co.ukmaker.netsim.parser.Parser.State.COMPONENT;
+import static uk.co.ukmaker.netsim.parser.Parser.State.DONE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.ENTITY;
+import static uk.co.ukmaker.netsim.parser.Parser.State.EXPECT;
+import static uk.co.ukmaker.netsim.parser.Parser.State.GENERATE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.IDLE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.INCLUDE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.INPUT;
+import static uk.co.ukmaker.netsim.parser.Parser.State.NET;
+import static uk.co.ukmaker.netsim.parser.Parser.State.NET_OR_END;
+import static uk.co.ukmaker.netsim.parser.Parser.State.OUTPUT;
+import static uk.co.ukmaker.netsim.parser.Parser.State.PORT_OR_COMPONENT;
+import static uk.co.ukmaker.netsim.parser.Parser.State.PROBE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.SIMULATE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.SOURCE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.SOURCE_OR_PROBE;
+import static uk.co.ukmaker.netsim.parser.Parser.State.VECTORS;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -27,9 +41,6 @@ import uk.co.ukmaker.netsim.netlist.Device;
 import uk.co.ukmaker.netsim.netlist.Terminal;
 import uk.co.ukmaker.netsim.netlist.TestFixture;
 import uk.co.ukmaker.netsim.netlist.Wire;
-import uk.co.ukmaker.netsim.netlist.Terminal.Type;
-import uk.co.ukmaker.netsim.pins.InputPin;
-import uk.co.ukmaker.netsim.pins.Pin;
 
 /**
  * Really simple and dim parser Spits out Circuits ready for Compilation
