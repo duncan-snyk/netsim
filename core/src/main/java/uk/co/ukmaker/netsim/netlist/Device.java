@@ -62,7 +62,7 @@ public class Device<T extends Model> implements Component {
 			return "/"+name;
 		}
 		
-		return parentComponent.getName()+"/"+name;
+		return parentComponent.getPath()+"/"+name;
 	}
 
 	@Override

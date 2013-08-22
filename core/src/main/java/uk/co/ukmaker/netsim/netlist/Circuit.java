@@ -46,7 +46,7 @@ public class Circuit implements Component {
 			return "/"+name;
 		}
 		
-		return parentComponent.getName()+"/"+name;
+		return parentComponent.getPath()+"/"+name;
 	}
 	
 	@Override

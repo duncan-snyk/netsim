@@ -26,6 +26,7 @@ public class EightBitAdderSliceTest extends TestHarness {
 
 		// Here come the test vectors
 		//      CIN    A     B    SUM  CARRY
+		propagationDelay = 100000;
 		expect(   X,    X,X,X,X,X,X,X,X,    X,X,X,X,X,X,X,X,    X,X,X,X,X,X,X,X,    X);
 		for(int a=0; a<256; a++) {
 			for(int b=0; b<256; b++) {
@@ -37,7 +38,6 @@ public class EightBitAdderSliceTest extends TestHarness {
 	
 		LocalSimulator sim = getSimulator();
 		
-		propagationDelay = 1000000;
 		
 		sim.simulate(netlist, moment, testProbes);
 		

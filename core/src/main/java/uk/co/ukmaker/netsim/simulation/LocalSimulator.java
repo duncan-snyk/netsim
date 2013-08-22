@@ -26,7 +26,9 @@ public class LocalSimulator implements Simulator, SimulatorNode {
 	
 	private NetlistDriver driver;
 	
-	private Map<String, Integer> netDrivers;
+	private Map<String, Integer> netDriversList;
+	
+	private long lastmoment = -1;
 	
 	@Override
 	public void simulate(Netlist netlist, long howLongFor, List<TestProbe> testProbes) throws Exception {
@@ -75,16 +77,24 @@ public class LocalSimulator implements Simulator, SimulatorNode {
 	}
 	
 	public long useNextMoment() throws Exception {
+		
 		NetEvent nextEvent = netEventQueue.head();
+		
 		if(nextEvent == null) {
 			throw new Exception("No new net events are queued");
 		}
+		
+		if(nextEvent.moment < lastmoment) {
+			throw new Exception("Causality violation at "+lastmoment+" - trying to rewind time to "+nextEvent.moment);
+		}
+		
+		lastmoment = nextEvent.moment;
 		
 		return nextEvent.moment;
 	}
 	
 	public void await(long moment) {
-		driver.await(moment, netDrivers, this);
+		driver.await(moment, netDriversList, this);
 	}
 	
 	public void update(long moment) {
@@ -92,12 +102,12 @@ public class LocalSimulator implements Simulator, SimulatorNode {
 	}
 	
 	public boolean propagate(long moment) {
-		netDrivers = new HashMap<String, Integer>();
+		netDriversList = new HashMap<String, Integer>();
 		return driver.propagate(moment, this);
 	}
 	
 	public boolean propagate(long moment, Set<Net> nets) {
-		netDrivers = new HashMap<String, Integer>();
+		netDriversList = new HashMap<String, Integer>();
 		return driver.propagate(moment, nets, this);
 	}
 	
@@ -116,10 +126,10 @@ public class LocalSimulator implements Simulator, SimulatorNode {
 		for(Net n : netDrivers.keySet()) {
 			Integer numDrivers = netDrivers.get(n);
 			String id = n.getId();
-			if(this.netDrivers.containsKey(id)) {
-				this.netDrivers.put(id, this.netDrivers.get(id) + numDrivers);
+			if(this.netDriversList.containsKey(id)) {
+				this.netDriversList.put(id, this.netDriversList.get(id) + numDrivers);
 			} else {
-				this.netDrivers.put(id, numDrivers);
+				this.netDriversList.put(id, numDrivers);
 			}
 		}
 	}

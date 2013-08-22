@@ -114,7 +114,15 @@ public class NetlistDriver {
 		
 		boolean propagated = false;
 		
+		Set<Net> seen = new HashSet<Net>();
+		
 		for(Net n : nets) {
+			
+			if(seen.contains(n)) {
+				System.out.println("Reprocessing a net!");
+			}
+			
+			seen.add(n);
 			
 			int drivers = 0;
 			
@@ -169,8 +177,6 @@ public class NetlistDriver {
 		
 		for(Net n : nets) {
 			
-			int drivers = 0;
-			
 			for(Model m : n.getModels()) {
 				
 				if(processedModels.contains(m)) {
@@ -185,10 +191,12 @@ public class NetlistDriver {
 					ScheduledValue nextValue = p.useMostRecentValue();
 					if(nextValue != null) {
 						Net pn = p.getNet();
-						if(!nextValues.containsKey(pn)) {
+						if(nextValues.containsKey(pn)) {
+							nextValues.get(pn).add(nextValue.getMoment());
+						} else {
 							nextValues.put(pn, new ArrayList<Long>());
+							nextValues.get(pn).add(nextValue.getMoment());
 						}
-						nextValues.get(pn).add(nextValue.getMoment());
 					}
 				}
 			}

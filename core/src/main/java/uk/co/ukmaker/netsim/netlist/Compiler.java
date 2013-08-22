@@ -13,8 +13,6 @@ import uk.co.ukmaker.netsim.pins.Pin;
 **/
 public class Compiler {
 	
-	private int netId = 1;
-	
 	private Map<Device, Model> models = new HashMap<Device, Model>();
 	
 	private Netlist netlist;
@@ -52,7 +50,6 @@ public class Compiler {
 			net = new Net(component.getPath()+"_"+t.getName());
 			netlist.addNet(net);
 		}
-		
 		
 		if(component instanceof Device) {
 			Wire w = t.getExternalWire();

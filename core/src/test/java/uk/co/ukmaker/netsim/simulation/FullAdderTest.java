@@ -20,6 +20,9 @@ public class FullAdderTest extends TestHarness {
 
 		probe("Sum",     "sum");
 		probe("Carry", "cout");
+		
+		propagationDelay = 1000000;
+
 
 		// Here come the test vectors
 		//      CIN    A     B    SUM  CARRY
@@ -41,9 +44,7 @@ public class FullAdderTest extends TestHarness {
 	
 		
 		LocalSimulator sim = getSimulator();
-		
-		propagationDelay = 1000000;
-		
+				
 		sim.simulate(netlist, moment, testProbes);
 		
 		assertFalse(sim.failed());

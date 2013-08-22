@@ -61,6 +61,10 @@ abstract public class Model {
 		return outputs;
 	}
 	
+	public List<InputPin> getInputPins() {
+		return inputs;
+	}
+	
 	/**
 	 * Ask the Component to run its behaviour at the given moment
 	 * 
@@ -110,6 +114,22 @@ abstract public class Model {
 
 	public Pin getPin(String pinName) {
 		return pins.get(pinName);
+	}
+	
+	public String toString() {
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("%s:%s [ ", getUnitName(), getName()));
+		for(InputPin i : getInputPins()) {
+			sb.append(String.format("->%s(%s) ", i.getName(), i.getInputValue()));
+		}
+		
+		for(OutputPin o : getOutputPins()) {
+			sb.append(String.format(" %s->(%s)", o.getName(), o.getOutputValue()));
+		}
+		
+		sb.append("]\n");
+		return sb.toString();
 	}
 
 }

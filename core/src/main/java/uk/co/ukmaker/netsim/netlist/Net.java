@@ -76,14 +76,24 @@ public class Net {
 		return models;
 	}
 	
+	
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("NET %s = %s \n", id, v));
 		for(InputPin i : sinks) {
-			sb.append(String.format("    ->%s\n", i.getName()));
+			sb.append(String.format("    ->%s[%s]\n", i.getName(), i.getComponent().getUnitName()));
 		}
 		for(OutputPin o : sources) {
-			sb.append(String.format("    %s->\n", o.getName()));
+			sb.append(String.format("    [%s]%s->\n", o.getComponent().getUnitName(), o.getName()));
 		}
 		
 		return sb.toString();

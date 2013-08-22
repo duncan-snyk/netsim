@@ -48,10 +48,4 @@ abstract public class TwoInputLogicGate extends Model {
 			q.scheduleOutputValue(moment+tpd, SignalValue.ZERO);
 		}
 	}
-	
-	public String toString() {
-		return String.format("%s [a=%s, b=%s, q=%s]", 
-				name, a.getInputValue(),b.getInputValue(),q.getOutputValue());
-	}
-	
 }

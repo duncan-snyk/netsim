@@ -15,7 +15,9 @@ import uk.co.ukmaker.netsim.SignalValue;
 import uk.co.ukmaker.netsim.models.test.SequenceGenerator;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Circuit;
+import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Component;
+import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.netlist.ParserTest;
 import uk.co.ukmaker.netsim.netlist.TestClip;
 import uk.co.ukmaker.netsim.netlist.TestFixture;
@@ -31,10 +33,10 @@ public class SimulatorTest {
 	@Test
 	public void shouldSimulateHalfAdder() throws Exception {
 		
-		InputStream netlist = ParserTest.class.getClassLoader().getResourceAsStream("half-adder.netlist");
+		InputStream source = ParserTest.class.getClassLoader().getResourceAsStream("half-adder.netlist");
 		
 		Parser p = new Parser();
-		p.parse(netlist);
+		p.parse(source);
 		
 		Component halfAdder = p.getEntity();
 		
@@ -102,27 +104,16 @@ public class SimulatorTest {
 		probes.add(sum.getModel());
 		probes.add(carry.getModel());
 		
-		LocalSimulatorNode sim = new LocalSimulatorNode(circuit, probes);
-		sim.simulate(t(7));
+		Compiler c = new Compiler();
+		
+		Netlist netlist = c.compile(circuit);
+		
+		LocalSimulator sim = new LocalSimulator();
+		
+		sim.simulate(netlist, 7000000, probes);
+
 		
 		assertFalse(sum.getModel().hasErrors());
 		assertFalse(carry.getModel().hasErrors());
-	}
-	
-	@Test
-	public void shouldRunSimulationFromFile() throws Exception {
-		URL r = ParserTest.class.getClassLoader().getResource("adder.sim");
-		File f = new File(r.getFile());
-		FileInputStream netlist = new FileInputStream(f);
-		
-		Parser p = new Parser();
-		p.setBaseDir(f.getParentFile());
-		p.parse(netlist);
-		
-		TestFixture testFixture = (TestFixture)p.getEntity();
-		
-		LocalSimulatorNode sim = new LocalSimulatorNode(testFixture);
-		sim.simulate(testFixture.getEndMoment());
-
 	}
 }

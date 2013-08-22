@@ -26,6 +26,8 @@ public class AdderSliceTest extends TestHarness {
 
 		// Here come the test vectors
 		//      CIN    A     B    SUM  CARRY
+		propagationDelay = 1000000;
+		
 		expect(   X,    X,X,X,X,    X,X,X,X,    X,X,X,X,    X);
 		for(int a=0; a<16; a++) {
 			for(int b=0; b<16; b++) {
@@ -36,8 +38,6 @@ public class AdderSliceTest extends TestHarness {
 		}
 	
 		LocalSimulator sim = getSimulator();
-		
-		propagationDelay = 1000000;
 		
 		sim.simulate(netlist, moment, testProbes);
 		

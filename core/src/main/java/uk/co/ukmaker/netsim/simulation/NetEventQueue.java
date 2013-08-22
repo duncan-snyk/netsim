@@ -21,6 +21,11 @@ public class NetEventQueue {
 			this.net = net;
 			this.drivers = drivers;
 		}
+		
+		
+		public String toString() {
+			return "@"+moment+" ("+drivers+") on "+net;
+		}
 	}
 	
 	public static class Schedule {
@@ -58,7 +63,7 @@ public class NetEventQueue {
 				}
 				return;
 			}
-			
+			p = n;
 			n = n.next;
 		}
 		
@@ -137,5 +142,20 @@ public class NetEventQueue {
 		
 		return events;
 		
+	}
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("NetEventQueue [\n");
+		int i = 0;
+		Schedule s = head;
+		while(i < 100 && s != null) {
+			i++;
+			sb.append(s.event);
+			sb.append("\n");
+			s=s.next;
+		}
+		sb.append("]\n");
+		return sb.toString();
 	}
 }
