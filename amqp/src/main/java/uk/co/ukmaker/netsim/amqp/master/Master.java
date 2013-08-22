@@ -2,19 +2,12 @@ package uk.co.ukmaker.netsim.amqp.master;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.QueueingConsumer;
 
 import uk.co.ukmaker.netsim.amqp.ClusterData;
 import uk.co.ukmaker.netsim.amqp.ClusterNode;
@@ -22,11 +15,18 @@ import uk.co.ukmaker.netsim.amqp.Routing;
 import uk.co.ukmaker.netsim.amqp.messages.ClusterMessage;
 import uk.co.ukmaker.netsim.amqp.messages.ModelMessage;
 import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.models.test.TestProbe;
+import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.netlist.ParserTest;
 import uk.co.ukmaker.netsim.netlist.TestFixture;
 import uk.co.ukmaker.netsim.parser.Parser;
-import uk.co.ukmaker.netsim.simulation.LocalSimulatorNode;
+import uk.co.ukmaker.netsim.simulation.Simulator;
+
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.QueueingConsumer;
 
 /**
  * A cluster Master is responsible for:
@@ -58,8 +58,10 @@ public class Master {
 	private ClusterData cluster;
 	
 	private Netlist netlist;
+	private long simulationEnd = 0;
+	private List<TestProbe> testProbes;
 	
-	private LocalSimulatorNode simulation;
+	private DistributedNetlistDriver driver = new DistributedNetlistDriver();
 	
 	public void initialize() throws IOException {
 		
@@ -84,47 +86,7 @@ public class Master {
 		discoveryChannel.basicConsume(routing.getDiscoveryQueueName(), true, consumer);
 	}
 	
-	public LocalSimulatorNode loadSimulation(String filename) throws Exception {
-		File f = new File(filename);
-		FileInputStream netlist = new FileInputStream(f);
-		
-		Parser p = new Parser();
-		p.setBaseDir(f.getParentFile());
-		p.parse(netlist);
-		
-		TestFixture testFixture = (TestFixture)p.getEntity();
-		
-		simulation = new LocalSimulatorNode(testFixture);
-		
-		return simulation;
-//		sim.simulate(testFixture.getEndMoment());
-	}
-	
-	public void installModels() throws IOException {
-		Netlist netlist = simulation.getNetlist();
-		List<Model> models = netlist.getModels();
-		// give each node a fair proportion of the models
-		// we really ought to hae some way of weighting things
-		// as a function of e.g. memory used, but hey
-		int modelsPerNode = models.size() / cluster.getNodes().size();
-		int leftovers = models.size() - (modelsPerNode * cluster.getNodes().size());
-		
-		int installed = 0;
-		
-		for(ClusterNode node : cluster.getNodes()) {
-			for(int i=0; i<modelsPerNode; i++) {
-				Model m = models.get(installed++);
-				installModel(node, m);
-			}
-		}
-		
-		for(ClusterNode node : cluster.getNodes()) {
-			for(int i=0; i<leftovers; i++) {
-				Model m = models.get(installed++);
-				installModel(node, m);
-			}
-		}
-	}
+
 	
 	public ClusterData discoverNodes() throws Exception {
 		
@@ -138,13 +100,21 @@ public class Master {
 		// crufty. Discovery gives the nodes one second to reply
 		QueueingConsumer.Delivery delivery;
 		while((delivery = consumer.nextDelivery(routing.getDiscoveryTimeout())) != null) {
-			ClusterNode node = ClusterNode.read(new String(delivery.getBody()));
+			ClusterNode node = readClusterNode(new String(delivery.getBody()));
 			cluster.getNodes().add(node);
 		}
 		
 		cluster.setState(ClusterData.State.ENUMERATED);
 		
 		return cluster;
+	}
+	
+	
+	// Deserialize from wire format which is "name:ramSize"
+	public ClusterNode readClusterNode(String serialized) {
+		String[]  bits = serialized.split(":");
+		return new ClusterNode(nodeChannel, routing.getNodesExchangeName(), bits[0], Integer.parseInt(bits[1]));
+		
 	}
 	
 	public void clearAll() throws Exception {
@@ -167,22 +137,42 @@ public class Master {
 		
 		broadcastChannel.basicPublish(routing.getBroadcastExchangeName(), "", props, bytes);
 	}
-	
-	public void installModel(ClusterNode node, Model model) throws IOException {
-		String routingKey = routing.getNodeRoutingKey(node);
-		ModelMessage message = new ModelMessage(model);
-		
-		BasicProperties props = new BasicProperties.Builder()
-		.build();
-	
-		byte[] bytes = message.toString().getBytes();
-	
-		System.out.println("Sending "+model.getUnitName()+" to "+node.getName());
 
-		nodeChannel.basicPublish(routing.getNodesExchangeName(), routingKey, props, bytes);
+	
+	public void loadSimulation(String filename) throws Exception {
+
+		URL r = ParserTest.class.getClassLoader().getResource(filename);
+		File f = new File(r.getFile());
+		FileInputStream source = new FileInputStream(f);
 		
+		Parser p = new Parser();
+		p.setBaseDir(f.getParentFile());
+		p.parse(source);
+		
+		TestFixture testFixture = (TestFixture)p.getEntity();
+		
+		Compiler c = new Compiler();
+		
+		netlist = c.compile(testFixture);
+		simulationEnd = testFixture.getEndMoment();
+		testProbes = testFixture.getTestProbes();
+		
+		System.out.print("Loaded Simulation");
+		System.out.print("-------------------------------------------");
+		System.out.println("Circuit = "+p.getEntity().getName());
+		System.out.println("End Time = "+simulationEnd);
+		System.out.println(testProbes.size()+" TestProbes are attached");
+	}
+	
+	public void installModels() throws IOException {
+		driver.installModels(cluster, netlist);
 	}
 	
 
-
+	
+	public void simulate() throws Exception {
+		Simulator simulator = new Simulator();
+		simulator.setNetlistDriver(driver);
+		simulator.simulate(netlist, simulationEnd, testProbes);
+	}
 }

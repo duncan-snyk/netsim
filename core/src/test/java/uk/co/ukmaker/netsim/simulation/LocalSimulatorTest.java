@@ -38,7 +38,7 @@ public class LocalSimulatorTest {
 		
 		Netlist netlist = c.compile(testFixture);
 		
-		LocalSimulator sim = new LocalSimulator();
+		Simulator sim = new Simulator();
 		
 		sim.simulate(netlist, testFixture.getEndMoment(), testFixture.getTestProbes());
 

@@ -13,7 +13,7 @@ import uk.co.ukmaker.netsim.pins.Pin;
  * @author mcintyred
  *
  */
-public class ModelMessage {
+public class ModelMessage implements Message {
 
 	private final String unitName;
 	private final String className;
@@ -32,6 +32,16 @@ public class ModelMessage {
 		for(Pin p : m.getPins().values()) {
 			pinToNetMap.put(p.getName(), p.getNet().getId());
 		}
+	}
+	
+	@Override
+	public String getType() {
+		return "MODEL";
+	}
+
+	@Override
+	public byte[] getBytes() {
+		return toString().getBytes();
 	}
 	
 	public String getUnitName() {
@@ -76,5 +86,4 @@ public class ModelMessage {
 		
 		return modelMessage;
 	}
-
 }

@@ -2,9 +2,12 @@ package uk.co.ukmaker.netsim.models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import uk.co.ukmaker.netsim.netlist.Net;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.pins.OutputPin;
 import uk.co.ukmaker.netsim.pins.Pin;
@@ -63,6 +66,16 @@ abstract public class Model {
 	
 	public List<InputPin> getInputPins() {
 		return inputs;
+	}
+	
+	public Set<Net> getNets() {
+		
+		Set<Net> nets = new HashSet<Net>();
+		for(Pin p : pins.values()) {
+			nets.add(p.getNet());
+		}
+		
+		return nets;
 	}
 	
 	/**

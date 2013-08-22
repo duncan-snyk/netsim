@@ -36,7 +36,7 @@ public class EightBitAdderSliceTest extends TestHarness {
 			}
 		}
 	
-		LocalSimulator sim = getSimulator();
+		Simulator sim = getSimulator();
 		
 		
 		sim.simulate(netlist, moment, testProbes);

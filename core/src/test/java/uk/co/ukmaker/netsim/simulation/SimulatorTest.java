@@ -108,7 +108,7 @@ public class SimulatorTest {
 		
 		Netlist netlist = c.compile(circuit);
 		
-		LocalSimulator sim = new LocalSimulator();
+		Simulator sim = new Simulator();
 		
 		sim.simulate(netlist, 7000000, probes);
 

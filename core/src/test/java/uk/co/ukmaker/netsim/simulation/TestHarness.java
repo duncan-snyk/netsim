@@ -40,20 +40,17 @@ abstract public class TestHarness {
 		p.parse(netlistsrc);
 		
 		component = p.getEntity();
-		
-		// Construct a simple circuit and test it
-		// This will be a half-adder
 		circuit = new Circuit("TestFixture");
 		circuit.addComponent(component);
 	}
 	
-	public LocalSimulator getSimulator() throws CompilationException {
+	public Simulator getSimulator() throws CompilationException {
 		
 		Compiler c = new Compiler();
 		
 		netlist = c.compile(circuit);
 		
-		LocalSimulator sim = new LocalSimulator();
+		Simulator sim = new Simulator();
 		
 		return sim;
 	}

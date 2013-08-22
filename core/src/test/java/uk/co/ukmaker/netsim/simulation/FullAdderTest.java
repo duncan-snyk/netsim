@@ -43,7 +43,7 @@ public class FullAdderTest extends TestHarness {
 		expect(ZERO, ZERO,    X,    X,    X);
 	
 		
-		LocalSimulator sim = getSimulator();
+		Simulator sim = getSimulator();
 				
 		sim.simulate(netlist, moment, testProbes);
 		

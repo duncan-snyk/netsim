@@ -5,9 +5,10 @@ import java.util.Map;
 public class NodesMessage {
 	
 	public static enum Type {
-		AWAIT_ALL,
-		AWAIT,
-		UPDATE
+		INITIALISE,
+		PROPAGATE_OUTPUTS,
+		PROPAGATE_INPUTS,
+		UPDATE_MODELS
 	}
 	
 	private final Type type;

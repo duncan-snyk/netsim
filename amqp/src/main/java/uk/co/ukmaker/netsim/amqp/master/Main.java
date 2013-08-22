@@ -1,16 +1,21 @@
 package uk.co.ukmaker.netsim.amqp.master;
 
 import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import uk.co.ukmaker.netsim.amqp.ClusterData;
 import uk.co.ukmaker.netsim.amqp.ClusterNode;
-import uk.co.ukmaker.netsim.simulation.LocalSimulatorNode;
+import uk.co.ukmaker.netsim.netlist.Compiler;
+import uk.co.ukmaker.netsim.netlist.Netlist;
+import uk.co.ukmaker.netsim.netlist.ParserTest;
+import uk.co.ukmaker.netsim.netlist.TestFixture;
+import uk.co.ukmaker.netsim.parser.Parser;
 
 /*
  * Main control loop for a cluster node
@@ -63,7 +68,12 @@ public class Main {
     				
     			} else if("load".equals(bits[0])) {
     				
-    				load(bits);
+    				
+    				if(bits.length < 2) {
+    					throw new Exception("load: filename required");
+    				}
+    				
+    				master.loadSimulation(bits[1]);
     				
     			} else if("installModels".equals(bits[0])) {
     				master.installModels();
@@ -78,16 +88,6 @@ public class Main {
 
 	}
 	
-	public void load(String[] cmd) throws Exception {
-		
-		if(cmd.length < 2) {
-			throw new Exception("load: filename required");
-		}
-		
-		LocalSimulatorNode sim = master.loadSimulation(cmd[1]);
-		
-		System.out.print("Loaded.  Circuit = ");
-		System.out.println(sim.getNetlist().getCircuit().getName());
-	}
+
 
 }
