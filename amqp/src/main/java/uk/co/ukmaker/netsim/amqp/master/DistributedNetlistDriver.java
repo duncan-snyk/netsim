@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.node.PropagateInputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.PropagatedNetDriversMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.UpdateEventQueueMessage;
@@ -18,7 +19,7 @@ import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.netlist.Net;
 import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.simulation.NetlistDriver;
-import uk.co.ukmaker.netsim.simulation.SimulatorCallbackHandler;
+import uk.co.ukmaker.netsim.simulation.NetEventPropagator;
 
 public class DistributedNetlistDriver implements NetlistDriver {
 	
@@ -33,7 +34,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		this.netlist = netlist;
 	}
 	
-	public void installModels(ClusterData cluster, Netlist netlist) throws IOException {
+	public void installModels(ClusterData cluster) throws Exception {
 		
 		this.cluster = cluster;
 		netNodeMap = new HashMap<String, Set<ClusterNode>>();
@@ -62,21 +63,26 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		}
 	}
 	
-	public void installModel(Model m, ClusterNode n) throws IOException {
-		n.installModel(m);
+	public void installModel(Model m, ClusterNode n) throws Exception {
+		Future<Message> ack = n.installModel(m);
 		for(Net net : m.getNets()) {
 			if(!netNodeMap.containsKey(net.getId())) {
 				netNodeMap.put(net.getId(),  new HashSet<ClusterNode>());
 			}
 			netNodeMap.get(net.getId()).add(n);
 		}
+		
+		ack.get();
 	}
 
 	@Override
-	public void initialise(SimulatorCallbackHandler callbackHandler) throws Exception {
+	public Map<String, Set<Long>> initialiseModels() throws Exception {
 		// send an initialise message to each node
 		// then wait for the responses
 		List<Future<Message>> responses = new ArrayList<>();
+		
+		Map<String, Set<Long>> nextValues = new HashMap<String, Set<Long>>();
+		
 		for(ClusterNode n : cluster.getNodes()) {
 			responses.add(n.initialiseModels());
 		}
@@ -84,13 +90,21 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		// Wait for the responses and callback to the simulator as we get them
 		for(Future<Message> response : responses) {
 			UpdateEventQueueMessage m = (UpdateEventQueueMessage)response.get();
-			callbackHandler.updateEventQueue(m.getNetMoments());
+			for(String netId : m.getNetMoments().keySet()) {
+				if(!nextValues.containsKey(netId)) {
+					nextValues.put(netId, new HashSet<Long>());
+				}
+				
+				nextValues.get(netId).addAll(m.getNetMoments().get(netId));
+			}
 		}
+		
+		return nextValues;
 	}
 
 	@Override
-	public void propagateOutputs(long moment, Set<String> netIds,
-			SimulatorCallbackHandler callbackHandler) throws Exception {
+	public Map<String, Integer> propagateOutputs(long moment, Set<String> netIds,
+			NetEventPropagator propagator) throws Exception {
 		
 		// Broadcast the list of nets to all the nodes.
 		
@@ -104,30 +118,69 @@ public class DistributedNetlistDriver implements NetlistDriver {
 			responses.add(n.propagateOutputs(m));
 		}
 		
+		// gather up the results as they come in
+		Map<String, Integer> netDrivers = new HashMap<String, Integer>();
+		
 		// Wait for the responses and callback to the simulator as we get them
 		for(Future<Message> response : responses) {
 			PropagatedNetDriversMessage r = (PropagatedNetDriversMessage)response.get();
-			callbackHandler.propagatedNetDrivers(r.getNetDrivers());
+			
+			for(String netId : r.getNetDrivers().keySet()) {
+				if(netDrivers.containsKey(netId)) {
+					netDrivers.put(netId, netDrivers.get(netId) + r.getNetDrivers().get(netId));
+				}
+			}
+		}
+		
+		return netDrivers;
+	}
+
+	@Override
+	public void propagateInputs(long moment, Map<String, Integer> netDrivers) throws Exception {
+		// Again, we'll just send the list to all the nodes for the moment
+		PropagateInputsMessage m = new PropagateInputsMessage(moment, netDrivers);
+		List<Future<Message>> responses = new ArrayList<>();
+		
+		for(ClusterNode n : cluster.getNodes()) {
+			responses.add(n.propagateInputs(m));
+		}
+		
+		// wait for the acks
+		for(Future<Message> f : responses) {
+			f.get();
 		}
 	}
 
 	@Override
-	public void propagateInputs(long moment, Map<String, Integer> netDrivers,
-			SimulatorCallbackHandler callbackHandler) {
+	public Map<String, Set<Long>> updateModels(long moment) throws Exception {
+		// send an initialise message to each node
+		// then wait for the responses
+		List<Future<Message>> responses = new ArrayList<>();
 		
+		Map<String, Set<Long>> nextValues = new HashMap<String, Set<Long>>();
 		
+		for(ClusterNode n : cluster.getNodes()) {
+			responses.add(n.updateModels(moment));
+		}
 		
-	}
-
-	@Override
-	public void updateModels(long moment, SimulatorCallbackHandler callbackHandler) {
-		// TODO Auto-generated method stub
+		// Wait for the responses and callback to the simulator as we get them
+		for(Future<Message> response : responses) {
+			UpdateEventQueueMessage m = (UpdateEventQueueMessage)response.get();
+			for(String netId : m.getNetMoments().keySet()) {
+				if(!nextValues.containsKey(netId)) {
+					nextValues.put(netId, new HashSet<Long>());
+				}
+				
+				nextValues.get(netId).addAll(m.getNetMoments().get(netId));
+			}
+		}
+		
+		return nextValues;
 		
 	}
 
 	@Override
 	public void scheduleNetValue(String netId, ScheduledValue value) {
-		// TODO Auto-generated method stub
-		
+		throw new RuntimeException("Unexpected attempt to schedule a net value on the master");
 	}
 }

@@ -2,7 +2,6 @@ package uk.co.ukmaker.netsim.amqp.messages.nodereply;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import uk.co.ukmaker.netsim.amqp.messages.Message;
 
@@ -20,8 +19,6 @@ public class PropagatedNetDriversMessage implements Message {
 	public Map<String, Integer> getNetDrivers() {
 		return netDrivers;
 	}
-
-
 
 	@Override
 	public void populateHeaders(Map<String, Object> headers) {

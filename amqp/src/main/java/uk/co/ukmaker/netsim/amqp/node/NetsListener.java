@@ -4,16 +4,19 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import uk.co.ukmaker.netsim.amqp.Routing;
 import uk.co.ukmaker.netsim.amqp.messages.netlist.ScheduleNetValueMessage;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.AMQP.BasicProperties;
 
+@Service
 public class NetsListener {
 	
 	@Autowired
@@ -32,6 +35,8 @@ public class NetsListener {
 	private String netsQueueName;
 	
 	public void initialise() throws IOException {
+		
+		netsQueueName = routing.getNetsQueueName(node);
 		
 		netsChannel = connectionFactory.newConnection().createChannel();
 		netsChannel.exchangeDeclare(routing.getNetsExchangeName(), "topic");

@@ -5,8 +5,6 @@ import java.net.UnknownHostException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import uk.co.ukmaker.netsim.amqp.master.ClusterNode;
-import uk.co.ukmaker.netsim.amqp.node.BroadcastListener;
 import uk.co.ukmaker.netsim.amqp.node.Node;
 
 @Service
@@ -46,8 +44,8 @@ public class Routing {
 		this.broadcastExchangeName = broadcastExchangeName;
 	}
 
-	public String getBroadcastQueueName() {
-		return broadcastQueueName;
+	public String getBroadcastQueueName(Node node) {
+		return broadcastQueueName+"_"+node.getName();
 	}
 
 	public void setBroadcastQueueName(String broadcastQueueName) {
@@ -118,7 +116,7 @@ public class Routing {
 		this.netsQueueBase = netsQueueBase;
 	}
 
-	public String getNetsQueueName(ClusterNode node) throws UnknownHostException {
+	public String getNetsQueueName(Node node) throws UnknownHostException {
 		return getNetsQueueBase() +  node.getName();
 	}
 	

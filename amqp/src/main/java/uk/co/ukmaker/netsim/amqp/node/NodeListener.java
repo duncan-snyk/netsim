@@ -4,36 +4,40 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.AMQP.BasicProperties;
+import org.springframework.stereotype.Service;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.amqp.Routing;
-import uk.co.ukmaker.netsim.amqp.master.ClusterNode;
 import uk.co.ukmaker.netsim.amqp.messages.Message;
 import uk.co.ukmaker.netsim.amqp.messages.netlist.ScheduleNetValueMessage;
+import uk.co.ukmaker.netsim.amqp.messages.node.InitialiseModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateInputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.UpdateModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.PropagatedNetDriversMessage;
+import uk.co.ukmaker.netsim.amqp.messages.nodereply.SimpleAckMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.UpdateEventQueueMessage;
 import uk.co.ukmaker.netsim.models.Model;
-import uk.co.ukmaker.netsim.simulation.SimulatorCallbackHandler;
+import uk.co.ukmaker.netsim.simulation.NetEventPropagator;
+
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 
 /**
  * Handles messages on the node queue
  * @author mcintyred
  *
  */
-public class NodeListener implements SimulatorCallbackHandler {
+@Service
+public class NodeListener implements NetEventPropagator {
 	
 	@Autowired 
 	Routing routing;
@@ -69,7 +73,19 @@ public class NodeListener implements SimulatorCallbackHandler {
 				System.out.println("Processing node message: "+message);
 
 				try {
-					onNodeMessage(properties, body);
+					Message reply = onNodeMessage(properties, body);
+					if(reply != null) {
+						
+						Map<String, Object> replyHeaders = new HashMap<String, Object>();
+						reply.populateHeaders(replyHeaders);
+						
+						
+						BasicProperties replyProps = new BasicProperties.Builder()
+						.headers(replyHeaders)
+						.build();
+						
+						nodeChannel.basicPublish("", properties.getReplyTo(), replyProps, reply.getBytes());
+					}
 				} catch (Exception e) {
 					throw new IOException("Error handling message", e);
 				}
@@ -82,46 +98,54 @@ public class NodeListener implements SimulatorCallbackHandler {
 		netsExchangeName = routing.getNetsExchangeName();
 	}
 	
-	public void onNodeMessage(BasicProperties properties, byte[] body) throws Exception {
+	public Message onNodeMessage(BasicProperties properties, byte[] body) throws Exception {
 	
-		String type = (String)properties.getHeaders().get(Message.TYPE_HEADER);
+		String type = properties.getHeaders().get(Message.TYPE_HEADER).toString();
+		
+		if(InitialiseModelsMessage.TYPE.equals(type)) {
+			return initialiseModels(InitialiseModelsMessage.read(properties.getHeaders(), body));
+		}
 		
 		if(PropagateInputsMessage.TYPE.equals(type)) {
-			propagateInputs(PropagateInputsMessage.read(properties.getHeaders(), body));
-			return;
+			return propagateInputs(PropagateInputsMessage.read(properties.getHeaders(), body));
 		}
 		
 		if(PropagateOutputsMessage.TYPE.equals(type)) {
-			propagateOutputs(PropagateOutputsMessage.read(properties.getHeaders(), body));
-			return;
+			return propagateOutputs(PropagateOutputsMessage.read(properties.getHeaders(), body));
 		}
 		
 		if(UpdateModelsMessage.TYPE.equals(type)) {
-			updateModels(UpdateModelsMessage.read(properties.getHeaders(), body));
-			return;
+			return updateModels(UpdateModelsMessage.read(properties.getHeaders(), body));
 		}
 		
 		if(InstallModelMessage.TYPE.equals(type)) {
-			installModel(InstallModelMessage.read(properties.getHeaders(), body));
-			return;
+			return installModel(InstallModelMessage.read(properties.getHeaders(), body));
 		}
 		
 		throw new Exception("Unknown message type "+type+" received by NodeListener");
 	}
 	
-	public void propagateInputs(PropagateInputsMessage m) throws Exception {
-		node.getNetlistDriver().propagateInputs(m.getMoment(), m.getNetDrivers(), this);
+	public Message initialiseModels(InitialiseModelsMessage m) throws Exception {
+		 Map<String, Set<Long>>  netEvents = node.getNetlistDriver().initialiseModels();
+		return new UpdateEventQueueMessage(netEvents);
 	}
 	
-	public void propagateOutputs(PropagateOutputsMessage m) throws Exception {
-		node.getNetlistDriver().propagateOutputs(m.getMoment(), m.getNetIds(), this);
+	public Message propagateInputs(PropagateInputsMessage m) throws Exception {
+		node.getNetlistDriver().propagateInputs(m.getMoment(), m.getNetDrivers());
+		return new SimpleAckMessage();
 	}
 	
-	public void updateModels(UpdateModelsMessage m) throws Exception {
-		node.getNetlistDriver().updateModels(m.getMoment(), this);
+	public Message propagateOutputs(PropagateOutputsMessage m) throws Exception {
+		Map<String, Integer> netDrivers = node.getNetlistDriver().propagateOutputs(m.getMoment(), m.getNetIds(), this);
+		return new PropagatedNetDriversMessage(netDrivers);
+	}
+	
+	public Message updateModels(UpdateModelsMessage m) throws Exception {
+		Map<String, Set<Long>> nextEvents = node.getNetlistDriver().updateModels(m.getMoment());
+		return new UpdateEventQueueMessage(nextEvents);
 	}
 
-	public void installModel(InstallModelMessage installModelMessage) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+	public Message installModel(InstallModelMessage installModelMessage) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		
 		Model model = (Model)Class.forName(installModelMessage.getClassName()).newInstance();
 		
@@ -134,6 +158,7 @@ public class NodeListener implements SimulatorCallbackHandler {
 			String netId = installModelMessage.getPinToNetMap().get(pinName);
 			node.connectPin(model, netId, pinName);
 		}
+		return new SimpleAckMessage();
 	}
 
 	@Override
@@ -152,36 +177,4 @@ public class NodeListener implements SimulatorCallbackHandler {
 		netsChannel.basicPublish(netsExchangeName, netId, props, m.getBytes());	
 		
 	}
-
-	@Override
-	public void propagatedNetDrivers(Map<String, Integer> netDrivers) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void updateEventQueue(Map<String, List<Long>> netMoments) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void inputsPropagated() {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	protected void sendToNets(Message m) throws IOException {
-
-		Map<String, Object> headers = new HashMap<String, Object>();
-		
-		m.populateHeaders(headers);
-		
-		BasicProperties props = new BasicProperties.Builder()
-		.headers(headers)
-		.build();
-
-		netsChannel.basicPublish(netsExchangeName, null, props, m.getBytes());
-	}
-
 }

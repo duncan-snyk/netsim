@@ -2,7 +2,6 @@ package uk.co.ukmaker.netsim.amqp.messages.node;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import uk.co.ukmaker.netsim.amqp.messages.Message;
 import uk.co.ukmaker.netsim.models.Model;

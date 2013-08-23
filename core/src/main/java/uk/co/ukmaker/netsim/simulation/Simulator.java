@@ -15,7 +15,7 @@ import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.pins.InputPin;
 import uk.co.ukmaker.netsim.simulation.NetEventQueue.NetEvent;
 
-public class Simulator implements SimulatorCallbackHandler {
+public class Simulator implements NetEventPropagator {
 
 	private Netlist netlist;
 	private List<String> formats = new ArrayList<String>();
@@ -29,11 +29,6 @@ public class Simulator implements SimulatorCallbackHandler {
 	private Map<String, Integer> netDriversList;
 	
 	private long lastmoment = -1;
-	
-	private boolean awaitingPropagateOutputs = false;
-	private boolean outputsPropagated = false;
-	private boolean awaitingPropagateInputs = false;
-	private boolean awaitingUpdate = false;
 	
 	public void setNetlistDriver(NetlistDriver driver) {
 		this.driver = driver;
@@ -56,10 +51,7 @@ public class Simulator implements SimulatorCallbackHandler {
 
 		printHeaders();
 		
-		awaitingUpdate = true;
-		driver.initialise(this);
-		awaitModelsUpdated();
-		
+		updateEventQueue(driver.initialiseModels());
 		moment = useNextMoment();
 		
 		while(moment < howLongFor) {
@@ -70,14 +62,11 @@ public class Simulator implements SimulatorCallbackHandler {
 				netsToPropagate.add(e.net.getId());
 			}
 				
-			propagateOutputs(moment, netsToPropagate);
-			if(awaitOutputsPropagated()) {
-				
+			if(propagateOutputs(moment, netsToPropagate)) {
+
 				propagateInputs(moment);
-				awaitInputsPropagated();
 				
 				updateModels(moment);
-				awaitModelsUpdated();
 			}
 			
 			moment = useNextMoment();
@@ -106,47 +95,18 @@ public class Simulator implements SimulatorCallbackHandler {
 	}
 	
 	public void propagateInputs(long moment)  throws Exception {
-		awaitingPropagateInputs = true;
-		driver.propagateInputs(moment, netDriversList, this);
-	}
-	
-	public void awaitInputsPropagated() {
-		while(awaitingPropagateInputs);
+		driver.propagateInputs(moment, netDriversList);
 	}
 	
 	public void updateModels(long moment) throws Exception {
-		awaitingUpdate = true;
-		driver.updateModels(moment, this);
+		updateEventQueue(driver.updateModels(moment));
 	}
-	
-	public void awaitModelsUpdated() {
-		while(awaitingUpdate);
-	}
-	
-	public void propagateOutputs(long moment, Set<String> netIds) throws Exception {
-		outputsPropagated = false;
-		awaitingPropagateOutputs = true;
+
+	public boolean propagateOutputs(long moment, Set<String> netIds) throws Exception {
 		netDriversList = new HashMap<String, Integer>();
-		driver.propagateOutputs(moment, netIds, this);
-	}
-	
-	public boolean awaitOutputsPropagated() {
-		while(awaitingPropagateOutputs);
-		return outputsPropagated;
-	}
-	
-
-	@Override
-	public void propagateOutput(String netId, ScheduledValue value) {
-		try {
-			driver.scheduleNetValue(netId, value);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public void propagatedNetDrivers(Map<String, Integer> netDrivers) {
+		Map<String, Integer> netDrivers = driver.propagateOutputs(moment, netIds, this);
+		
+		boolean outputsPropagated = false;
 		
 		for(String id : netDrivers.keySet()) {
 			
@@ -161,25 +121,27 @@ public class Simulator implements SimulatorCallbackHandler {
 			}
 		}
 		
-		awaitingPropagateOutputs = false;
+		return outputsPropagated;
 	}
 
 	@Override
-	public void updateEventQueue(Map<String, List<Long>> nextValues) {
+	public void propagateOutput(String netId, ScheduledValue value) {
+		try {
+			driver.scheduleNetValue(netId, value);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void updateEventQueue(Map<String, Set<Long>> nextValues) {
 		for(String n : nextValues.keySet()) {
-			List<Long> moments = nextValues.get(n);
+			Set<Long> moments = nextValues.get(n);
 			for(Long moment : moments) {
 				netEventQueue.schedule(new NetEvent(moment, netlist.getNet(n), 1));
 			}
 		}
-		awaitingUpdate = false;
 	}
 
-	@Override
-	public void inputsPropagated() {
-		awaitingPropagateInputs = false;
-	}
-	
 	public Netlist getNetlist() {
 		return netlist;
 	}

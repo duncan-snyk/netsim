@@ -2,17 +2,14 @@ package uk.co.ukmaker.netsim.amqp.node;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.netlist.Net;
 import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.pins.Pin;
+import uk.co.ukmaker.netsim.simulation.LocalNetlistDriver;
 import uk.co.ukmaker.netsim.simulation.NetlistDriver;
 
 @Component
@@ -20,8 +17,7 @@ public class Node {
 
 	private Netlist netlist;
 	
-	@Autowired
-	private NetlistDriver driver;
+	private NetlistDriver driver = new LocalNetlistDriver();
 	
 	private String name;
 	private long ramSize;
@@ -45,6 +41,14 @@ public class Node {
 	
 	public long getRamSize() {
 		return ramSize;
+	}
+	
+	public void clear() throws Exception {
+		initialise();
+	}
+	
+	public void reset() throws Exception {
+		initialise();
 	}
 	
 	public Netlist getNetlist() {

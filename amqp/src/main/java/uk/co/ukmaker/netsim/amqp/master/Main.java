@@ -1,19 +1,10 @@
 package uk.co.ukmaker.netsim.amqp.master;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-import uk.co.ukmaker.netsim.netlist.Compiler;
-import uk.co.ukmaker.netsim.netlist.Netlist;
-import uk.co.ukmaker.netsim.netlist.ParserTest;
-import uk.co.ukmaker.netsim.netlist.TestFixture;
-import uk.co.ukmaker.netsim.parser.Parser;
 
 /*
  * Main control loop for a cluster node
@@ -43,7 +34,7 @@ public class Main {
 		main.run();
 	}
 	
-	public void run() {
+	public void run() throws Exception {
 		
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 		while(true) {
@@ -57,6 +48,7 @@ public class Main {
     			String[] bits = command.split("\\s+");
     			
     			if("enumerate".equals(command)) {
+    				
     				ClusterData data = master.discoverNodes();
     				
     				System.out.println("Discovered "+data.getNodes().size()+" nodes:");
@@ -66,7 +58,6 @@ public class Main {
     				
     			} else if("load".equals(bits[0])) {
     				
-    				
     				if(bits.length < 2) {
     					throw new Exception("load: filename required");
     				}
@@ -74,13 +65,53 @@ public class Main {
     				master.loadSimulation(bits[1]);
     				
     			} else if("installModels".equals(bits[0])) {
+    				
     				master.installModels();
-    			} else if("connectNets".equals(bits[0])) {
-    				master.connectNets();
+    				
+    			} else if("initialiseModels".equals(bits[0])) {
+    				
+    				master.initialiseModels();
+    				
+    			} else if("simulate".equals(bits[0])) {
+    				
+    				master.simulate();
+    				
+    			} else if("run".equals(bits[0])) {
+    				
+    				if(bits.length < 2) {
+    					throw new Exception("run: filename required");
+    				}
+    				
+    				ClusterData data = master.discoverNodes();
+    				
+    				System.out.println("Discovered "+data.getNodes().size()+" nodes:");
+    				for(ClusterNode node : data.getNodes()) {
+    					System.out.println(String.format("%12s  RAM = %12d", node.getName(), node.getRamSize()));
+    				}
+    				
+    				master.clearAll();
+    				
+    				master.loadSimulation(bits[1]);
+    				
+    				master.installModels();
+    				
+    				master.simulate();
+    				
+    			} else if("help".equals(bits[0])) {
+    				
+    				System.out.println("Commands:");
+    				System.out.println("enumerate");
+    				System.out.println("load <fileName>");
+    				System.out.println("installModels");
+    				System.out.println("initialiseModels");
+    				System.out.println("run <fileName>");
+    				System.out.println("simulate");
+    				System.out.println("");
     			}
     			
 			} catch(Exception e) {
 				System.err.println("ERROR: "+e.getMessage());
+				e.printStackTrace(System.err);
 			}
 		}
 

@@ -1,6 +1,7 @@
 package uk.co.ukmaker.netsim.simulation;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,19 +18,19 @@ public interface NetlistDriver {
 	
 	/**
 	 * Initialise all models so they can schedule their first events
-	 * @param callbackHandler
+	 * @return Map<String, List<Long>> nextValues <netId, <moments>>
 	 */
-	public abstract void initialise(SimulatorCallbackHandler callbackHandler) throws Exception;
+	public abstract Map<String, Set<Long>> initialiseModels() throws Exception;
 
 	/**
 	 * Propagate any scheduled events from output pins to their nets
 	 * @param moment
 	 * @param nets
 	 * @param simulator
-	 * @return
+	 * @return Map<String, Integer> <netId, numDrivers>
 	 */
-	public abstract void propagateOutputs(long moment, Set<String> netIds,
-			SimulatorCallbackHandler callbackHandler) throws Exception;
+	public abstract Map<String, Integer> propagateOutputs(long moment, Set<String> netIds,
+			NetEventPropagator propagator) throws Exception;
 	
 	/**
 	 * Propagate any scheduled events from nets to their input pins
@@ -37,15 +38,14 @@ public interface NetlistDriver {
 	 * @param netDrivers
 	 * @param callbackHandler
 	 */
-	public abstract void propagateInputs(long moment, Map<String, Integer> netDrivers,
-			SimulatorCallbackHandler callbackHandler) throws Exception;
+	public abstract void propagateInputs(long moment, Map<String, Integer> netDrivers) throws Exception;
 
 	/**
 	 * Cause all models on the updated nets to update
 	 * @param moment
+	 * @return Map<String, List<Long>> nextValues <netId, <moments>>
 	 */
-	public abstract void updateModels(long moment,
-			SimulatorCallbackHandler callbackHandler) throws Exception;
+	public abstract Map<String, Set<Long>> updateModels(long moment) throws Exception;
 
 
 	

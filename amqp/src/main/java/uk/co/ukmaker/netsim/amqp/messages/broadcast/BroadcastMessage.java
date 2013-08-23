@@ -27,7 +27,7 @@ public class BroadcastMessage implements Message {
 	
 	public static BroadcastMessage read(Map<String, Object> headers, byte[] bytes) {
 		
-		String type = (String) headers.get(TYPE_HEADER);
+		String type = headers.get(TYPE_HEADER).toString();
 		
 		return new BroadcastMessage(Type.valueOf(type));
 
@@ -35,7 +35,7 @@ public class BroadcastMessage implements Message {
 
 	@Override
 	public void populateHeaders(Map<String, Object> headers) {
-		headers.put(TYPE_HEADER, type);
+		headers.put(TYPE_HEADER, type.toString());
 	}
 
 	@Override

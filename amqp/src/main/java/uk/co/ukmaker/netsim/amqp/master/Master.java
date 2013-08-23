@@ -1,25 +1,28 @@
 package uk.co.ukmaker.netsim.amqp.master;
 
+import static uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage.Type.CLEAR;
+import static uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage.Type.RESET;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import uk.co.ukmaker.netsim.amqp.Routing;
 import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage;
-import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
-import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Netlist;
-import uk.co.ukmaker.netsim.netlist.ParserTest;
 import uk.co.ukmaker.netsim.netlist.TestFixture;
 import uk.co.ukmaker.netsim.parser.Parser;
 import uk.co.ukmaker.netsim.simulation.Simulator;
+import uk.co.ukmaker.netsim.simulation.NetEventPropagator;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -61,12 +64,13 @@ public class Master {
 	
 	private DistributedNetlistDriver driver = new DistributedNetlistDriver();
 	
+	private Simulator simulator;
+	private NetEventPropagator handler;
+	
 	public void initialize() throws IOException {
 		
 		broadcastChannel = connectionFactory.newConnection().createChannel();
 		broadcastChannel.exchangeDeclare(routing.getBroadcastExchangeName(), "fanout");
-		broadcastChannel.queueDeclare(routing.getBroadcastQueueName(), false, false, false, null);
-		broadcastChannel.queueBind(routing.getBroadcastQueueName(), routing.getBroadcastExchangeName(), "");
 		broadcastChannel.basicQos(1);
 		
 		discoveryChannel = connectionFactory.newConnection().createChannel();
@@ -82,6 +86,10 @@ public class Master {
 
 		consumer = new QueueingConsumer(discoveryChannel);
 		discoveryChannel.basicConsume(routing.getDiscoveryQueueName(), true, consumer);
+		
+		simulator = new Simulator();
+		simulator.setNetlistDriver(driver);
+		handler = new DistributedCallbackHandler();
 	}
 	
 
@@ -91,7 +99,7 @@ public class Master {
 		cluster = new ClusterData();
 		cluster.setState(ClusterData.State.ENUMERATING);
 		
-		broadcast(BroadcastMessage.ENUMERATE);
+		broadcast(new BroadcastMessage(BroadcastMessage.Type.ENUMERATE));
 		
 		// Now consume everything available on the discoveryChannel
 		
@@ -116,22 +124,24 @@ public class Master {
 	}
 	
 	public void clearAll() throws Exception {
-		broadcast(BroadcastMessage.CLEAR);
+		broadcast(new BroadcastMessage(CLEAR));
 	}
 	
 	public void resetAll() throws Exception {
-		broadcast(BroadcastMessage.RESET);
-	}
-	
-	public void connectNets() throws Exception {
-		broadcast(BroadcastMessage.CONNECT_NETS);
+		broadcast(new BroadcastMessage(RESET));
 	}
 	
 	public void broadcast(BroadcastMessage message) throws IOException {
-		BasicProperties props = new BasicProperties.Builder()
-			.build();
 		
-		byte[] bytes = message.toString().getBytes();
+		Map<String, Object> headers = new HashMap<String, Object>();
+		
+		message.populateHeaders(headers);
+		
+		BasicProperties props = new BasicProperties.Builder()
+		.headers(headers)
+		.build();
+
+		byte[] bytes = message.getBytes();
 		
 		broadcastChannel.basicPublish(routing.getBroadcastExchangeName(), "", props, bytes);
 	}
@@ -139,7 +149,7 @@ public class Master {
 	
 	public void loadSimulation(String filename) throws Exception {
 
-		URL r = ParserTest.class.getClassLoader().getResource(filename);
+		URL r = new URL("file://"+filename);
 		File f = new File(r.getFile());
 		FileInputStream source = new FileInputStream(f);
 		
@@ -154,6 +164,7 @@ public class Master {
 		netlist = c.compile(testFixture);
 		simulationEnd = testFixture.getEndMoment();
 		testProbes = testFixture.getTestProbes();
+		driver.setNetlist(netlist);
 		
 		System.out.print("Loaded Simulation");
 		System.out.print("-------------------------------------------");
@@ -162,15 +173,15 @@ public class Master {
 		System.out.println(testProbes.size()+" TestProbes are attached");
 	}
 	
-	public void installModels() throws IOException {
-		driver.installModels(cluster, netlist);
+	public void installModels() throws Exception {
+		driver.installModels(cluster);
 	}
 	
-
+	public void initialiseModels() throws Exception {
+		driver.initialiseModels();
+	}
 	
 	public void simulate() throws Exception {
-		Simulator simulator = new Simulator();
-		simulator.setNetlistDriver(driver);
 		simulator.simulate(netlist, simulationEnd, testProbes);
 	}
 }

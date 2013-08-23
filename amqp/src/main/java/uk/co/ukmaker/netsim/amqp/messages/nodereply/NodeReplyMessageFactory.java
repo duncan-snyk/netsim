@@ -10,7 +10,7 @@ public class NodeReplyMessageFactory {
 	public static Message decode(ClusterNode node, Map<String, Object> headers,
 			byte[] bytes)  throws Exception {
 		
-		String type = (String)headers.get(Message.TYPE_HEADER);
+		String type = headers.get(Message.TYPE_HEADER).toString();
 		
 		if(PropagatedNetDriversMessage.TYPE.equals(type)) {
 			return PropagatedNetDriversMessage.read(headers, bytes);
@@ -18,6 +18,10 @@ public class NodeReplyMessageFactory {
 		
 		if(UpdateEventQueueMessage.TYPE.equals(type)) {
 			return UpdateEventQueueMessage.read(headers, bytes);
+		}
+		
+		if(SimpleAckMessage.TYPE.equals(type)) {
+			return SimpleAckMessage.read(headers, bytes);
 		}
 		
 		throw new Exception("Unknown NodeReply message type "+type);

@@ -11,7 +11,9 @@ import java.util.concurrent.Future;
 import uk.co.ukmaker.netsim.amqp.messages.Message;
 import uk.co.ukmaker.netsim.amqp.messages.node.InitialiseModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
+import uk.co.ukmaker.netsim.amqp.messages.node.PropagateInputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
+import uk.co.ukmaker.netsim.amqp.messages.node.UpdateModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.NodeReplyMessageFactory;
 import uk.co.ukmaker.netsim.models.Model;
 
@@ -50,16 +52,24 @@ public class ClusterNode {
 		return name+':'+ramSize;
 	}
 	
-	public void installModel(Model model) throws IOException {
+	public Future<Message>  installModel(Model model) throws IOException {
 		
-		send(new InstallModelMessage(model));
+		return sendAndReceive(new InstallModelMessage(model));
 	}
 	
 	public Future<Message> initialiseModels() throws IOException {
 		return sendAndReceive(new InitialiseModelsMessage());
 	}
 	
+	public Future<Message> updateModels(long moment) throws IOException {
+		return sendAndReceive(new UpdateModelsMessage(moment));
+	}
+	
 	public Future<Message> propagateOutputs(PropagateOutputsMessage m) throws IOException {
+		return sendAndReceive(m);
+	}
+	
+	public Future<Message> propagateInputs(PropagateInputsMessage m) throws IOException {
 		return sendAndReceive(m);
 	}
 	

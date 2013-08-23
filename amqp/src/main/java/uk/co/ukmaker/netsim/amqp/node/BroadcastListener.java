@@ -1,30 +1,22 @@
 package uk.co.ukmaker.netsim.amqp.node;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import uk.co.ukmaker.netsim.amqp.Routing;
+import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage;
+import uk.co.ukmaker.netsim.amqp.messages.discovery.EnumeratedMessage;
+
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.AMQP.BasicProperties;
-
-import uk.co.ukmaker.netsim.amqp.Routing;
-import uk.co.ukmaker.netsim.amqp.master.ClusterNode;
-import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage;
-import uk.co.ukmaker.netsim.amqp.messages.discovery.EnumeratedMessage;
-import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
-import uk.co.ukmaker.netsim.models.Model;
-import uk.co.ukmaker.netsim.netlist.Net;
-import uk.co.ukmaker.netsim.pins.Pin;
 
 /**
  * Listens to messages coming in on the broadcast queue
@@ -46,10 +38,11 @@ public class BroadcastListener {
 	@Autowired
 	private Node node;
 	
-	public void initialise() throws IOException {
+	public void initialise() throws Exception {
 		
 		broadcastChannel = connectionFactory.newConnection().createChannel();
-		broadcastChannel.queueDeclare(routing.getBroadcastQueueName(), false, false, false, null);
+		broadcastChannel.queueDeclare(routing.getBroadcastQueueName(node), false, false, false, null);
+		broadcastChannel.queueBind(routing.getBroadcastQueueName(node), routing.getBroadcastExchangeName(), "");
 		broadcastChannel.basicQos(1);
 		
 		discoveryChannel = connectionFactory.newConnection().createChannel();
@@ -60,15 +53,20 @@ public class BroadcastListener {
 			@Override
 			public void handleDelivery(String consumerTag, Envelope envelope,
 					BasicProperties properties, byte[] body) throws IOException {
-				onBroadcastMessage(properties, body);
+				try {
+					onBroadcastMessage(properties, body);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}		
 		};
 
-		broadcastChannel.basicConsume(routing.getBroadcastQueueName(), true, broadcastCallback);
+		broadcastChannel.basicConsume(routing.getBroadcastQueueName(node), true, broadcastCallback);
 	}
 	
 
-	public void onBroadcastMessage(BasicProperties properties, byte[] body) throws IOException {
+	public void onBroadcastMessage(BasicProperties properties, byte[] body) throws Exception {
 		
 		BroadcastMessage cm = BroadcastMessage.read(properties.getHeaders(), body);
 		
@@ -77,11 +75,7 @@ public class BroadcastListener {
 		case ENUMERATE:
 			enumerate();
 			break;
-			
-		case CONNECT_NETS:
-			connectNets();
-			break;
-			
+
 		case CLEAR:
 			clear();
 			break;
@@ -108,16 +102,12 @@ public class BroadcastListener {
 		discoveryChannel.basicPublish(routing.getDiscoveryExchangeName(), "", props, m.getBytes());
 	}
 	
-	
-	public void connectNets() throws IOException {
-
-	}
-	public void clear() {
-		
+	public void clear() throws Exception {
+		node.clear();
 	}
 	
-	public void reset() {
-		
+	public void reset() throws Exception {
+		node.reset();
 	}
 
 }
