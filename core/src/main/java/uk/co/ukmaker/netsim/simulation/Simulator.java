@@ -65,9 +65,9 @@ public class Simulator implements SimulatorCallbackHandler {
 		while(moment < howLongFor) {
 			
 			List<NetEvent> netEvents = netEventQueue.useScheduledEvents(moment);
-			Set<Net> netsToPropagate = new HashSet<Net>();
+			Set<String> netsToPropagate = new HashSet<String>();
 			for(NetEvent e : netEvents) {
-				netsToPropagate.add(e.net);
+				netsToPropagate.add(e.net.getId());
 			}
 				
 			propagateOutputs(moment, netsToPropagate);
@@ -123,11 +123,11 @@ public class Simulator implements SimulatorCallbackHandler {
 		while(awaitingUpdate);
 	}
 	
-	public void propagateOutputs(long moment, Set<Net> nets) throws Exception {
+	public void propagateOutputs(long moment, Set<String> netIds) throws Exception {
 		outputsPropagated = false;
 		awaitingPropagateOutputs = true;
 		netDriversList = new HashMap<String, Integer>();
-		driver.propagateOutputs(moment, nets, this);
+		driver.propagateOutputs(moment, netIds, this);
 	}
 	
 	public boolean awaitOutputsPropagated() {

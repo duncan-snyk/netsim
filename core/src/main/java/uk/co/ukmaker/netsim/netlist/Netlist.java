@@ -1,6 +1,7 @@
 package uk.co.ukmaker.netsim.netlist;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,18 +19,18 @@ import uk.co.ukmaker.netsim.models.test.TestProbe;
  */
 public class Netlist {
 
-	private Map<String, Net> nets = new HashMap<String, Net>();
+	private Map<String, Net> netMap = new HashMap<String, Net>();
 	
-	private List<Model> models = new ArrayList<Model>();
+	private Map<Integer, Model> models = new HashMap<Integer, Model>();
 	
 	private List<TestProbe> probes = new ArrayList<TestProbe>();
 	
 	public void addNet(Net net) {
-		nets.put(net.getId(), net);
+		netMap.put(net.getId(), net);
 	}
 	
-	public void addModel(Model d) {
-		models.add(d);
+	public void addModel(Model m) {
+		models.put(m.getUnitId(), m);
 	}
 	
 	public void addTestProbe(TestProbe probe) {
@@ -40,22 +41,24 @@ public class Netlist {
 		return probes;
 	}
 	
-	public void update(long moment) {
-		for(Model d : models) {
-			d.update(moment);
-		}
+	public List<Net> getNets() {
+		return Lists.newArrayList(netMap.values());
 	}
 	
-	public List<Net> getNets() {
-		return Lists.newArrayList(nets.values());
+	public Collection<String> getNetNames() {
+		return netMap.keySet();
 	}
 	
 	public List<Model> getModels() {
-		return models;
+		return Lists.newArrayList(models.values());
 	}
 
 	public Net getNet(String netId) {
-		return nets.get(netId);
+		return netMap.get(netId);
+	}
+	
+	public boolean hasNet(String netId) {
+		return netMap.containsKey(netId);
 	}
 
 }

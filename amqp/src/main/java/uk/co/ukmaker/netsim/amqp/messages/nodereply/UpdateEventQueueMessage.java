@@ -1,12 +1,16 @@
-package uk.co.ukmaker.netsim.amqp.messages;
+package uk.co.ukmaker.netsim.amqp.messages.nodereply;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import uk.co.ukmaker.netsim.amqp.messages.Message;
+
 
 public class UpdateEventQueueMessage implements Message {
+	
+	public static final String TYPE = "UEQ";
 	
 	private final Map<String, List<Long>> netMoments;
 	
@@ -19,8 +23,8 @@ public class UpdateEventQueueMessage implements Message {
 	}
 
 	@Override
-	public String getType() {
-		return "UEQ";
+	public void populateHeaders(Map<String, Object> headers) {
+		headers.put(TYPE_HEADER, TYPE);
 	}
 
 	@Override
@@ -45,7 +49,7 @@ public class UpdateEventQueueMessage implements Message {
 		return sb.toString().getBytes();
 	}
 	
-	public static UpdateEventQueueMessage readBytes(byte[] bytes) {
+	public static UpdateEventQueueMessage read(Map<String, Object> headers, byte[] bytes) {
 		String[] netBits = new String(bytes).split("}");
 		Map<String, List<Long>> netMoments = new HashMap<String, List<Long>>();
 		for(String netBit : netBits) {

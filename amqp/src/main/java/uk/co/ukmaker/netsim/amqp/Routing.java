@@ -5,7 +5,9 @@ import java.net.UnknownHostException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import uk.co.ukmaker.netsim.amqp.master.ClusterNode;
 import uk.co.ukmaker.netsim.amqp.node.BroadcastListener;
+import uk.co.ukmaker.netsim.amqp.node.Node;
 
 @Service
 public class Routing {
@@ -92,11 +94,11 @@ public class Routing {
 		this.nodeQueueBase = nodeQueueBase;
 	}
 	
-	public String getNodeQueueName(ClusterNode node) throws UnknownHostException {
+	public String getNodeQueueName(Node node) {
 		return getNodeQueueBase() +  node.getName();
 	}
-	
-	public String getNodeRoutingKey(ClusterNode node) throws UnknownHostException {
+
+	public String getNodeRoutingKey(Node node) {
 		return node.getName();
 	}
 

@@ -1,9 +1,10 @@
-package uk.co.ukmaker.netsim.amqp.messages;
+package uk.co.ukmaker.netsim.amqp.messages.node;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import uk.co.ukmaker.netsim.amqp.messages.Message;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.Pin;
 
@@ -13,20 +14,25 @@ import uk.co.ukmaker.netsim.pins.Pin;
  * @author mcintyred
  *
  */
-public class ModelMessage implements Message {
+public class InstallModelMessage implements Message {
+	
+	public static final String TYPE = "IM";
 
-	private final String unitName;
+	private final int unitId;
+	private final String name;
 	private final String className;
 	private final Map<String, String> pinToNetMap;
 	
-	public ModelMessage(String unitName, String className, Map<String, String> pinToNetMap) {
-		this.unitName = unitName;
+	public InstallModelMessage(String name, int unitId, String className, Map<String, String> pinToNetMap) {
+		this.name = name;
+		this.unitId = unitId;
 		this.className = className;
 		this.pinToNetMap = pinToNetMap;
 	}
 
-	public ModelMessage(Model m) {
-		unitName = m.getUnitName();
+	public InstallModelMessage(Model m) {
+		name = m.getName();
+		unitId = m.getUnitId();
 		className = m.getClass().getCanonicalName();
 		pinToNetMap = new HashMap<String, String>();
 		for(Pin p : m.getPins().values()) {
@@ -34,18 +40,18 @@ public class ModelMessage implements Message {
 		}
 	}
 	
-	@Override
-	public String getType() {
-		return "MODEL";
-	}
 
 	@Override
-	public byte[] getBytes() {
-		return toString().getBytes();
+	public void populateHeaders(Map<String, Object> headers) {
+		headers.put(TYPE_HEADER, TYPE);
 	}
-	
-	public String getUnitName() {
-		return unitName;
+
+	public int getUnitId() {
+		return unitId;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public String getClassName() {
@@ -56,13 +62,17 @@ public class ModelMessage implements Message {
 		return pinToNetMap;
 	}
 	
-	public String toString() {
+	@Override
+	public byte[] getBytes() {
 		StringBuilder sb = new StringBuilder();
 		// Serialized format for now is:\
-		// unitName\n
+		// name\n
+		// unitId\n
 		// className\n
 		// pinName:netName\n +
-		sb.append(unitName);
+		sb.append(name);
+		sb.append("\n");
+		sb.append(unitId);
 		sb.append("\n");
 		sb.append(className);
 		sb.append("\n");
@@ -72,18 +82,23 @@ public class ModelMessage implements Message {
 			sb.append(pinToNetMap.get(key));
 			sb.append("\n");
 		}
-		return sb.toString();
+		return sb.toString().getBytes();
 	}
 
-	public static ModelMessage parse(String message) {
-		String[] lines = message.split("\n");
+	public static InstallModelMessage read(Map<String, Object> headers, byte[] bytes) {
+		String[] lines = new String(bytes).split("\n");
 		Map<String, String> pinToNetMap = new HashMap<String, String>();
-		for(int i=2; i< lines.length; i++) {
+		for(int i=3; i< lines.length; i++) {
 			String[] bits = lines[i].split(":");
 			pinToNetMap.put(bits[0],  bits[1]);
 		}
-		ModelMessage modelMessage = new ModelMessage(lines[0], lines[1], pinToNetMap);
+		InstallModelMessage installModelMessage = new InstallModelMessage(
+				lines[0], 
+				Integer.parseInt(lines[1]), 
+				lines[2], 
+				pinToNetMap
+				);
 		
-		return modelMessage;
+		return installModelMessage;
 	}
 }

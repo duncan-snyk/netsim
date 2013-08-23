@@ -1,4 +1,4 @@
-package uk.co.ukmaker.netsim.amqp;
+package uk.co.ukmaker.netsim.amqp.master;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -8,13 +8,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import uk.co.ukmaker.netsim.amqp.messages.InitialiseMessage;
 import uk.co.ukmaker.netsim.amqp.messages.Message;
-import uk.co.ukmaker.netsim.amqp.messages.MessageFactory;
-import uk.co.ukmaker.netsim.amqp.messages.ModelMessage;
-import uk.co.ukmaker.netsim.amqp.responses.InitialiseResponse;
-import uk.co.ukmaker.netsim.amqp.responses.Response;
-import uk.co.ukmaker.netsim.amqp.responses.ResponseFactory;
+import uk.co.ukmaker.netsim.amqp.messages.node.InitialiseModelsMessage;
+import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
+import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
+import uk.co.ukmaker.netsim.amqp.messages.nodereply.NodeReplyMessageFactory;
 import uk.co.ukmaker.netsim.models.Model;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -54,18 +52,23 @@ public class ClusterNode {
 	
 	public void installModel(Model model) throws IOException {
 		
-		send(new ModelMessage(model));
+		send(new InstallModelMessage(model));
 	}
 	
-	public Future<Message> initialise() throws IOException {
-		return sendAndReceive(new InitialiseMessage());
+	public Future<Message> initialiseModels() throws IOException {
+		return sendAndReceive(new InitialiseModelsMessage());
+	}
+	
+	public Future<Message> propagateOutputs(PropagateOutputsMessage m) throws IOException {
+		return sendAndReceive(m);
 	}
 	
 	protected void send(Message m) throws IOException {
 		String routingKey = getName();
 		
 		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put("MESSAGE_TYPE", m.getType());
+		
+		m.populateHeaders(headers);
 		
 		BasicProperties props = new BasicProperties.Builder()
 		.headers(headers)
@@ -81,7 +84,7 @@ public class ClusterNode {
 		String routingKey = getName();
 		
 		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put("MESSAGE_TYPE", m.getType());
+		m.populateHeaders(headers);
 		
 		BasicProperties props = new BasicProperties.Builder()
 		.replyTo(replyQueue)
@@ -104,7 +107,7 @@ public class ClusterNode {
 					// loop
 				}
 				
-				return MessageFactory.decode(node, (String)r.getProps().getHeaders().get("MESSAGE_TYPE"), r.getBody());
+				return NodeReplyMessageFactory.decode(node, r.getProps().getHeaders(), r.getBody());
 				
 			}
 		});

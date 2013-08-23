@@ -59,8 +59,7 @@ import uk.co.ukmaker.netsim.pins.OutputPin;
  *  E_Nodes             Q_Node_<nodeId>            topic       PROPAGATE[ moment, {netId}]
  *                                                             AWAIT[ moment, {netId, numDrivers} ]
  *                                                             UPDATE[ moment, {netId} ]
- *                                                             
- *  E_Models            Q_Model_<nodeId>           topic       The master send MODEL messages to this queue to install models on nodes
+ *                                                             The master send MODEL messages to this queue to install models on nodes
  *  
  *  E_Acks              Q_Acks                     exclusive   Nodes send status messages back to the master
  *                                                             PROPAGATED[ {netId, numDrivers}, {netId, moment} ]
@@ -94,7 +93,7 @@ public class LocalNetlistDriver implements NetlistDriver {
 	 * @see uk.co.ukmaker.netsim.simulation.INetlistDriver#propagate(long, uk.co.ukmaker.netsim.simulation.NetlistDriverCallbackHandler)
 	 */
 	@Override
-	public void initialise(SimulatorCallbackHandler callbackHandler) {
+	public void initialise(SimulatorCallbackHandler callbackHandler) throws Exception {
 		// Initialisation
 		// Update all models first
 		netsToUpdate.clear();
@@ -106,12 +105,14 @@ public class LocalNetlistDriver implements NetlistDriver {
 	 * @see uk.co.ukmaker.netsim.simulation.INetlistDriver#propagate(long, java.util.Collection, uk.co.ukmaker.netsim.simulation.NetlistDriverCallbackHandler)
 	 */
 	@Override
-	public void propagateOutputs(long moment, Collection<Net> nets, SimulatorCallbackHandler callbackHandler) {
+	public void propagateOutputs(long moment, Set<String> netIds, SimulatorCallbackHandler callbackHandler) throws Exception {
 		
 		// Keep track of how many drivers propagated a signal onto each net so we can tell the master
 		Map<String, Integer> netDrivers = new HashMap<String, Integer>();
 		
-		for(Net n : nets) {
+		for(String netId : netIds) {
+			
+			Net n = netlist.getNet(netId);
 
 			int drivers = 0;
 			
@@ -137,7 +138,7 @@ public class LocalNetlistDriver implements NetlistDriver {
 	 * @see uk.co.ukmaker.netsim.simulation.INetlistDriver#await(long, java.util.Map, uk.co.ukmaker.netsim.simulation.NetlistDriverCallbackHandler)
 	 */
 	@Override
-	public void propagateInputs(long moment, Map<String, Integer> netDrivers, SimulatorCallbackHandler callbackHandler) {
+	public void propagateInputs(long moment, Map<String, Integer> netDrivers, SimulatorCallbackHandler callbackHandler) throws Exception {
 		
 		netsToUpdate.clear();
 		
@@ -154,7 +155,7 @@ public class LocalNetlistDriver implements NetlistDriver {
 	 * @see uk.co.ukmaker.netsim.simulation.INetlistDriver#update(long, uk.co.ukmaker.netsim.simulation.NetlistDriverCallbackHandler)
 	 */
 	@Override
-	public void updateModels(long moment, SimulatorCallbackHandler callbackHandler) {
+	public void updateModels(long moment, SimulatorCallbackHandler callbackHandler) throws Exception {
 
 		// When is the next value scheduled on a net?
 		Map<String, List<Long>> nextValues = new HashMap<String, List<Long>>();

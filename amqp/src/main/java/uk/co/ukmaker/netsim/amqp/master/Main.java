@@ -9,8 +9,6 @@ import java.net.URL;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import uk.co.ukmaker.netsim.amqp.ClusterData;
-import uk.co.ukmaker.netsim.amqp.ClusterNode;
 import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.netlist.ParserTest;

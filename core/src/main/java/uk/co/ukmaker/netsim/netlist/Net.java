@@ -90,10 +90,10 @@ public class Net {
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("NET %s = %s \n", id, v));
 		for(InputPin i : sinks) {
-			sb.append(String.format("    ->%s[%s]\n", i.getName(), i.getComponent().getUnitName()));
+			sb.append(String.format("    ->%s[U%s]\n", i.getName(), i.getComponent().getUnitId()));
 		}
 		for(OutputPin o : sources) {
-			sb.append(String.format("    [%s]%s->\n", o.getComponent().getUnitName(), o.getName()));
+			sb.append(String.format("    [U%s]%s->\n", o.getComponent().getUnitId(), o.getName()));
 		}
 		
 		return sb.toString();

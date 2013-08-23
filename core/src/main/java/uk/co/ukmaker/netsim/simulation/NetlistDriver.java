@@ -2,6 +2,7 @@ package uk.co.ukmaker.netsim.simulation;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.netlist.Net;
@@ -27,7 +28,7 @@ public interface NetlistDriver {
 	 * @param simulator
 	 * @return
 	 */
-	public abstract void propagateOutputs(long moment, Collection<Net> nets,
+	public abstract void propagateOutputs(long moment, Set<String> netIds,
 			SimulatorCallbackHandler callbackHandler) throws Exception;
 	
 	/**

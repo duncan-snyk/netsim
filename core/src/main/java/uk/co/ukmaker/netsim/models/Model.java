@@ -26,7 +26,7 @@ import uk.co.ukmaker.netsim.pins.Pin;
 abstract public class Model {
 	
 	private static int u = 1;
-	protected int unit;
+	protected int unitId;
 	
 	protected String name;
 	
@@ -35,7 +35,7 @@ abstract public class Model {
 	protected List<OutputPin> outputs = new ArrayList<OutputPin>();
 	
 	public Model(String name) {
-		unit = u++;
+		unitId = u++;
 		this.name = name;
 	}
 	
@@ -45,6 +45,14 @@ abstract public class Model {
 	
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public void setUnitId(int id) {
+		unitId = id;
+	}
+	
+	public int getUnitId() {
+		return unitId;
 	}
 	
 	protected void addPin(Pin p) {
@@ -120,10 +128,6 @@ abstract public class Model {
 		
 		return next;
 	}
-	
-	public String getUnitName() {
-		return "U"+unit;
-	}
 
 	public Pin getPin(String pinName) {
 		return pins.get(pinName);
@@ -132,7 +136,7 @@ abstract public class Model {
 	public String toString() {
 		
 		StringBuilder sb = new StringBuilder();
-		sb.append(String.format("%s:%s [ ", getUnitName(), getName()));
+		sb.append(String.format("U%s:%s [ ", getUnitId(), getName()));
 		for(InputPin i : getInputPins()) {
 			sb.append(String.format("->%s(%s) ", i.getName(), i.getInputValue()));
 		}

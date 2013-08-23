@@ -14,23 +14,23 @@ public interface SimulatorCallbackHandler {
 	 * @param net
 	 * @param value
 	 */
-	public void propagateOutput(String netId, ScheduledValue value);
+	public void propagateOutput(String netId, ScheduledValue value) throws Exception ;
 	
 	/**
 	 * Called when propagateOutputs is complete to inform the master which nets have how many drivers
 	 * @param netDrivers <netId, numDrivers>
 	 */
-	public void propagatedNetDrivers(Map<String, Integer> netDrivers);
+	public void propagatedNetDrivers(Map<String, Integer> netDrivers) throws Exception ;
 	
 	/**
 	 * Called when updateModels is complete to inform the master of newly scheduled future events
 	 * @param netMoments <netId, List<moment>>
 	 */
-	public void updateEventQueue(Map<String, List<Long>> netMoments);
+	public void updateEventQueue(Map<String, List<Long>> netMoments) throws Exception ;
 	
 	
 	/**
 	 * Called when propagateInputs is complete to inform the master that the netlist is now ready to update models
 	 */
-	public void inputsPropagated();
+	public void inputsPropagated() throws Exception ;
 }

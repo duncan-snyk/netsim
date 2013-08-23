@@ -9,11 +9,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import uk.co.ukmaker.netsim.amqp.ClusterData;
-import uk.co.ukmaker.netsim.amqp.ClusterNode;
 import uk.co.ukmaker.netsim.amqp.Routing;
-import uk.co.ukmaker.netsim.amqp.messages.ClusterMessage;
-import uk.co.ukmaker.netsim.amqp.messages.ModelMessage;
+import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage;
+import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Compiler;
@@ -93,7 +91,7 @@ public class Master {
 		cluster = new ClusterData();
 		cluster.setState(ClusterData.State.ENUMERATING);
 		
-		broadcast(ClusterMessage.ENUMERATE);
+		broadcast(BroadcastMessage.ENUMERATE);
 		
 		// Now consume everything available on the discoveryChannel
 		
@@ -118,18 +116,18 @@ public class Master {
 	}
 	
 	public void clearAll() throws Exception {
-		broadcast(ClusterMessage.CLEAR);
+		broadcast(BroadcastMessage.CLEAR);
 	}
 	
 	public void resetAll() throws Exception {
-		broadcast(ClusterMessage.RESET);
+		broadcast(BroadcastMessage.RESET);
 	}
 	
 	public void connectNets() throws Exception {
-		broadcast(ClusterMessage.CONNECT_NETS);
+		broadcast(BroadcastMessage.CONNECT_NETS);
 	}
 	
-	public void broadcast(ClusterMessage message) throws IOException {
+	public void broadcast(BroadcastMessage message) throws IOException {
 		BasicProperties props = new BasicProperties.Builder()
 			.build();
 		

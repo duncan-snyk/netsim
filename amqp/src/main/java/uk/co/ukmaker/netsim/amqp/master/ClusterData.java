@@ -1,7 +1,8 @@
-package uk.co.ukmaker.netsim.amqp;
+package uk.co.ukmaker.netsim.amqp.master;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 
 public class ClusterData {

@@ -17,13 +17,13 @@ public class Main {
 	 * @throws InterruptedException 
 	 * @throws IOException 
 	 */
-	public static void main(String[] args) throws InterruptedException, IOException {
+	public static void main(String[] args) throws Exception {
 		
 		ApplicationContext ctx = new ClassPathXmlApplicationContext("node-context.xml");
 		
-		BroadcastPort port = ctx.getBean(BroadcastPort.class);
+		RemoteNode remoteNode = ctx.getBean(RemoteNode.class);
 		
-		port.initialize();
+		remoteNode.initialise();
 		
 		while(true) {
 			// loop forever
