@@ -151,4 +151,42 @@ public class ScheduledValueQueue {
 		
 		return 0;
 	}
+	
+	public String toString() {
+		return toString(true);
+	}
+	
+	public String toString(boolean limitTo10Values) {
+		int i=0;
+		Schedule s = head;
+		StringBuffer sb = new StringBuffer();
+		boolean first = true;
+		while(s != null) {
+			i++;
+			if(limitTo10Values && i >= 10) {
+				break;
+			}
+			if(!first) {
+				sb.append(",");
+			} else {
+				first = false;
+			}
+			sb.append(s.value.toString());
+			
+			s = s.next;
+		}
+		
+		return sb.toString();
+	}
+	
+	public static ScheduledValueQueue fromString(String s) throws Exception {
+		ScheduledValueQueue q = new ScheduledValueQueue();
+		String[] bits = s.split(",");
+		for(String bit : bits) {
+			if(!bit.isEmpty()) {
+				q.schedule(ScheduledValue.fromString(bit));
+			}
+		}
+		return q;
+	}
 }

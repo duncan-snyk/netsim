@@ -31,6 +31,10 @@ public class Netlist {
 	
 	public void addModel(Model m) {
 		models.put(m.getUnitId(), m);
+		
+		if(m instanceof TestProbe) {
+			addTestProbe((TestProbe)m);
+		}
 	}
 	
 	public void addTestProbe(TestProbe probe) {

@@ -10,8 +10,12 @@ public class ScheduleNetValueMessage implements Message {
 	
 	public static final String TYPE = "SNV";
 
-	private final String netId;
-	private final ScheduledValue value;
+	private String netId;
+	private ScheduledValue value;
+	
+	public ScheduleNetValueMessage() {
+		
+	}
 
 	public ScheduleNetValueMessage(String netId, ScheduledValue value) {
 		super();
@@ -32,26 +36,4 @@ public class ScheduleNetValueMessage implements Message {
 	public void populateHeaders(Map<String, Object> headers) {
 		headers.put(TYPE_HEADER, TYPE);
 	}
-
-	@Override
-	public byte[] getBytes() {
-		// netId:moment:value
-		StringBuffer sb = new StringBuffer();
-		sb.append(netId);
-		sb.append(":");
-		sb.append(value.getMoment());
-		sb.append(":");
-		sb.append(value.getValue());
-		return sb.toString().getBytes();
-	}
-	
-	public static ScheduleNetValueMessage read(Map<String, Object> headers, byte[] bytes) {
-		
-		String[] bits = new String(bytes).split(":");
-		
-		return new ScheduleNetValueMessage(
-				bits[0], new ScheduledValue(Long.parseLong(bits[1]), SignalValue.valueOf(bits[2]))
-				);
-	}
-
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +16,9 @@ import uk.co.ukmaker.netsim.amqp.messages.node.PropagateInputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.PropagatedNetDriversMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.UpdateEventQueueMessage;
+import uk.co.ukmaker.netsim.amqp.node.RemoteNode;
 import uk.co.ukmaker.netsim.models.Model;
+import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Net;
 import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.simulation.NetlistDriver;
@@ -34,30 +37,74 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		this.netlist = netlist;
 	}
 	
-	public void installModels(ClusterData cluster) throws Exception {
+	/**
+	 * Install models on nodes.
+	 * If there is only a local node, install everything on that
+	 * Otherwise only install test pins on the local node and install the  other models on the other nodes
+	 * @param cluster
+	 * @param localNode
+	 * @throws Exception
+	 */
+	public void installModels(ClusterData cluster, RemoteNode localNode) throws Exception {
+		
+		ClusterNode localClusterNode = cluster.getNode(localNode.getNode().getName());
 		
 		this.cluster = cluster;
 		netNodeMap = new HashMap<String, Set<ClusterNode>>();
 		
 		List<Model> models = netlist.getModels();
+		List<TestProbe> testProbes = netlist.getTestProbes();
+		// Install the testprobes on the local node
+		for(TestProbe probe : testProbes) {
+			installModel(probe,  localClusterNode);
+		}
+		
 		// give each node a fair proportion of the models
 		// we really ought to hae some way of weighting things
 		// as a function of e.g. memory used, but hey
-		int modelsPerNode = models.size() / cluster.getNodes().size();
-		int leftovers = models.size() - (modelsPerNode * cluster.getNodes().size());
 		
-		int installed = 0;
+		List<ClusterNode> remoteNodes = new ArrayList<ClusterNode>();
+		for(ClusterNode n : cluster.getNodes()) {
+			if(n != localClusterNode) {
+				remoteNodes.add(n);
+			}
+		}
 		
-		for(ClusterNode node : cluster.getNodes()) {
+		if(remoteNodes.size() == 0) {
+			remoteNodes.add(localClusterNode);
+		}
+		
+		int nonProbeModels = models.size() - testProbes.size();
+		
+		int modelsPerNode;
+		int leftovers;
+		
+		modelsPerNode = nonProbeModels / remoteNodes.size();
+		leftovers = nonProbeModels - (modelsPerNode * remoteNodes.size());
+		
+		Iterator<Model> modelsIterator = models.listIterator();
+		
+		for(ClusterNode node : remoteNodes) {
 			for(int i=0; i<modelsPerNode; i++) {
-				Model m = models.get(installed++);
+				
+				Model m;
+				
+				do {
+					m = modelsIterator.next();
+				} while(m instanceof TestProbe);
+				
 				installModel(m, node);				
 			}
 		}
 		
-		for(ClusterNode node : cluster.getNodes()) {
+		for(ClusterNode node : remoteNodes) {
 			for(int i=0; i<leftovers; i++) {
-				Model m = models.get(installed++);
+				Model m;
+				
+				do {
+					m = modelsIterator.next();
+				} while(m instanceof TestProbe);
+				
 				installModel(m, node);				
 			}
 		}
@@ -126,7 +173,9 @@ public class DistributedNetlistDriver implements NetlistDriver {
 			PropagatedNetDriversMessage r = (PropagatedNetDriversMessage)response.get();
 			
 			for(String netId : r.getNetDrivers().keySet()) {
-				if(netDrivers.containsKey(netId)) {
+				if(!netDrivers.containsKey(netId)) {
+					netDrivers.put(netId,  r.getNetDrivers().get(netId));
+				} else {
 					netDrivers.put(netId, netDrivers.get(netId) + r.getNetDrivers().get(netId));
 				}
 			}

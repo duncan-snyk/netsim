@@ -113,6 +113,11 @@ public class LocalNetlistDriver implements NetlistDriver {
 		for(String netId : netIds) {
 			
 			Net n = netlist.getNet(netId);
+			
+			if(n == null) {
+				System.out.println("Unknown net: "+netId);
+				continue;
+			}
 
 			int drivers = 0;
 			
@@ -144,8 +149,10 @@ public class LocalNetlistDriver implements NetlistDriver {
 		
 		for(String netId : netDrivers.keySet()) {
 			Net n = netlist.getNet(netId);
-			n.await(moment, netDrivers.get(netId));
-			netsToUpdate.add(n);
+			if(n != null) {
+				n.await(moment, netDrivers.get(netId));
+				netsToUpdate.add(n);
+			}
 		}
 	}
 	

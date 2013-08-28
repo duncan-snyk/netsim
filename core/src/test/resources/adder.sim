@@ -13,6 +13,8 @@ simulate adderSlice
 	probe cout
 	probe sum[4]
 	
+	step 10000
+	
 	generate a[4] b[4] cin
 	expect   cout sum[4] 
 	

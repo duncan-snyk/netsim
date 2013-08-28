@@ -47,6 +47,11 @@ public class InputPin extends Pin implements Input {
 	}
 	
 	public void await(long moment, int drivers) {
-		while(!hasScheduledValue(moment, drivers));
+		while(!hasScheduledValue(moment, drivers)) { try {
+			Thread.sleep(0, 100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} }
 	}
 }

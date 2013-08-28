@@ -1,7 +1,10 @@
 package uk.co.ukmaker.netsim.models.test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.ScheduledValueQueue;
@@ -65,5 +68,20 @@ public class SequenceGenerator extends Model {
 	public String getName() {
 		return "SequenceGenerator";
 	}
+	
+	@Override
+	public Map<String, String> getParameters() {
+		Map<String, String> params = super.getParameters();
+		params.put("values", values.toString(false));		
+		return params;
+	}
 
+	@Override
+	public void setParameters(Map<String, String> params) throws Exception {
+		// TODO Auto-generated method stub
+		super.setParameters(params);
+		if(params.containsKey("values")) {
+			values = ScheduledValueQueue.fromString(params.get("values"));
+		}
+	}
 }

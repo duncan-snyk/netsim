@@ -6,7 +6,11 @@ import uk.co.ukmaker.netsim.amqp.messages.Message;
 
 public class BroadcastMessage implements Message {
 	
-	private final Type type;
+	private Type type;
+	
+	public BroadcastMessage() {
+		
+	}
 	
 	public BroadcastMessage(Type type) {
 		this.type = type;
@@ -24,22 +28,9 @@ public class BroadcastMessage implements Message {
     	CONNECT_NETS
     	;
 	}
-	
-	public static BroadcastMessage read(Map<String, Object> headers, byte[] bytes) {
-		
-		String type = headers.get(TYPE_HEADER).toString();
-		
-		return new BroadcastMessage(Type.valueOf(type));
-
-	}
 
 	@Override
 	public void populateHeaders(Map<String, Object> headers) {
 		headers.put(TYPE_HEADER, type.toString());
-	}
-
-	@Override
-	public byte[] getBytes() {
-		return null;
 	}
 }

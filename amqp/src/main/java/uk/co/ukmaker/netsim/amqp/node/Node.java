@@ -3,6 +3,7 @@ package uk.co.ukmaker.netsim.amqp.node;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import uk.co.ukmaker.netsim.models.Model;
@@ -19,15 +20,16 @@ public class Node {
 	
 	private NetlistDriver driver = new LocalNetlistDriver();
 	
+	@Value("${node.name}")
 	private String name;
 	private long ramSize;
 	
 	public void initialise() throws UnknownHostException {
-		try {
-			name = InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException e) {
-			name = InetAddress.getLocalHost().getHostAddress();
-		}
+		//try {
+		//	name = InetAddress.getLocalHost().getHostName();
+		//} catch (UnknownHostException e) {
+		//	name = InetAddress.getLocalHost().getHostAddress();
+		//}
 		
 		ramSize =  Runtime.getRuntime().totalMemory();
 		

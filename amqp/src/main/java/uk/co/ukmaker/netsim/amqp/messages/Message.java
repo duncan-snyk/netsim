@@ -9,6 +9,4 @@ public interface Message {
 	
 	public void populateHeaders(Map<String, Object> headers);
 
-	public byte[] getBytes();
-	
 }

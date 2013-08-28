@@ -8,8 +8,12 @@ public class EnumeratedMessage implements Message {
 	
 	public static final String TYPE = "ENM";
 	
-	private final String name;
-	private final long ramSize;
+	private String name;
+	private long ramSize;
+	
+	public EnumeratedMessage() {
+		
+	}
 
 	public EnumeratedMessage(String name, long ramSize) {
 		super();
@@ -26,17 +30,7 @@ public class EnumeratedMessage implements Message {
 	}
 
 	@Override
-	public byte[] getBytes() {
-		return (name+":"+ramSize).getBytes();
-	}
-
-	@Override
 	public void populateHeaders(Map<String, Object> headers) {
 		headers.put(TYPE_HEADER, TYPE);
-	}
-	
-	public static EnumeratedMessage read(Map<String, Object> headers, byte[] bytes) {
-		String[] bits = new String(bytes).split(":");
-		return new EnumeratedMessage(bits[0], Long.parseLong(bits[1]));
 	}
 }

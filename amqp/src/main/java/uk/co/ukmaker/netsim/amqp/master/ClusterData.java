@@ -31,4 +31,14 @@ public class ClusterData {
 	public List<ClusterNode> getNodes() {
 		return nodes;
 	}
+	
+	public ClusterNode getNode(String name) {
+		for(ClusterNode n : nodes) {
+			if(name.equals(n.getName())) {
+				return n;
+			}
+		}
+		
+		return null;
+	}
 }

@@ -10,8 +10,12 @@ public class PropagateOutputsMessage implements Message {
 	
 	public static final String TYPE = "PO";
 
-	private final long moment;
-	private final Set<String> netIds;
+	private long moment;
+	private Set<String> netIds;
+	
+	public PropagateOutputsMessage() {
+		
+	}
 	
 	public PropagateOutputsMessage(final long moment, final Set<String> netIds) {
 		this.moment = moment;
@@ -35,35 +39,4 @@ public class PropagateOutputsMessage implements Message {
 		headers.put(TYPE_HEADER, TYPE);
 		headers.put(MOMENT_HEADER, moment);
 	}
-
-
-	@Override
-	public byte[] getBytes() {
-		// netId:netId...
-		StringBuilder sb = new StringBuilder();
-		boolean first = true;
-		for(String netId : netIds) {
-			
-			if(!first) {
-				sb.append(":");
-			} else {
-				first = false;
-			}
-			
-			sb.append(netId);
-		}
-		
-		return sb.toString().getBytes();
-	}
-	
-	public static PropagateOutputsMessage read(Map<String, Object> headers, byte[] bytes) {
-		Set<String> netIds = new HashSet<String>();
-		String[] bits = new String(bytes).split(":");
-		for(String bit : bits) {
-			netIds.add(bit);
-		}
-		
-		return new PropagateOutputsMessage(Long.parseLong((String)headers.get(MOMENT_HEADER)), netIds);
-	}
-
 }

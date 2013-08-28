@@ -12,6 +12,7 @@ public class Token {
 		NET,
 		SOURCE,
 		PROBE,
+		STEP,
 		GENERATE,
 		EXPECT,
 		VECTOR

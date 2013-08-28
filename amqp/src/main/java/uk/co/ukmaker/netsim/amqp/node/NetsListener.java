@@ -3,6 +3,7 @@ package uk.co.ukmaker.netsim.amqp.node;
 import java.io.IOException;
 import java.util.Collection;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,8 @@ public class NetsListener {
 	
 	private String netsQueueName;
 	
+	private ObjectMapper mapper = new ObjectMapper();
+	
 	public void initialise() throws IOException {
 		
 		netsQueueName = routing.getNetsQueueName(node);
@@ -42,7 +45,8 @@ public class NetsListener {
 		netsChannel.exchangeDeclare(routing.getNetsExchangeName(), "topic");
 		netsChannel.queueDeclare(netsQueueName, false, true, true, null);
 		netsChannel.basicQos(1);
-		
+		System.out.println("Connecting to nets exchange as q "+netsQueueName);
+
 		netsCallback = new DefaultConsumer(netsChannel) {
 			@Override
 			public void handleDelivery(String consumerTag, Envelope envelope,
@@ -61,8 +65,8 @@ public class NetsListener {
 	
 	
 	public void onNetsMessage(BasicProperties properties, byte[] bytes) throws Exception {
-		ScheduleNetValueMessage m = ScheduleNetValueMessage.read(properties.getHeaders(), bytes);
-		
+		ScheduleNetValueMessage m = mapper.readValue(bytes, ScheduleNetValueMessage.class);
+		System.out.println(String.format("Scheduling net value %s = %s",m.getNetId(), m.getValue()));
 		node.getNetlistDriver().scheduleNetValue(m.getNetId(), m.getValue());
 	}
 
@@ -73,6 +77,7 @@ public class NetsListener {
 		// Bind it to the exchange using the netIds as the routing keys
 		for(String netId : netNames) {
 			netsChannel.queueBind(netsQueueName, routing.getNetsExchangeName(), netId);
+			System.out.println("Binding to "+netsQueueName+" with key "+netId);
 		}
 	}
 

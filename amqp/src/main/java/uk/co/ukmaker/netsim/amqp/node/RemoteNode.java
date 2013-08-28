@@ -24,5 +24,9 @@ public class RemoteNode {
 		nodeListener.initialise();
 		broadcastListener.initialise();
 	}
+	
+	public Node getNode() {
+		return node;
+	}
 
 }

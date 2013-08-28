@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,12 +39,19 @@ public class BroadcastListener {
 	@Autowired
 	private Node node;
 	
+	@Autowired
+	private NetsListener netsListener;
+	
+	private ObjectMapper mapper = new ObjectMapper();
+	
 	public void initialise() throws Exception {
 		
 		broadcastChannel = connectionFactory.newConnection().createChannel();
 		broadcastChannel.queueDeclare(routing.getBroadcastQueueName(node), false, false, false, null);
 		broadcastChannel.queueBind(routing.getBroadcastQueueName(node), routing.getBroadcastExchangeName(), "");
 		broadcastChannel.basicQos(1);
+		
+		System.out.println("Connecting to broadcast exchange as q "+routing.getBroadcastQueueName(node));
 		
 		discoveryChannel = connectionFactory.newConnection().createChannel();
 		discoveryChannel.exchangeDeclare(routing.getDiscoveryExchangeName(), "direct");
@@ -68,7 +76,7 @@ public class BroadcastListener {
 
 	public void onBroadcastMessage(BasicProperties properties, byte[] body) throws Exception {
 		
-		BroadcastMessage cm = BroadcastMessage.read(properties.getHeaders(), body);
+		BroadcastMessage cm = mapper.readValue(body, BroadcastMessage.class);
 		
 		switch(cm.getType()) {
 		
@@ -82,6 +90,10 @@ public class BroadcastListener {
 			
 		case RESET:
 			reset();
+			break;
+			
+		case CONNECT_NETS:
+			netsListener.connectNets();
 			break;
 			
 		default:
@@ -99,7 +111,7 @@ public class BroadcastListener {
 		
 		BasicProperties props = new BasicProperties.Builder().headers(headers).build();
 		
-		discoveryChannel.basicPublish(routing.getDiscoveryExchangeName(), "", props, m.getBytes());
+		discoveryChannel.basicPublish(routing.getDiscoveryExchangeName(), "", props, mapper.writeValueAsBytes(m));
 	}
 	
 	public void clear() throws Exception {

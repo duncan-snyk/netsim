@@ -14,7 +14,7 @@
 	Service context for a netsim Node
 	 -->
 	 
- 	<context:property-placeholder location="classpath:cluster.properties" />
+ 	<context:property-placeholder location="classpath:cluster.properties,classpath:node.properties" />
 	<context:component-scan base-package="uk.co.ukmaker.netsim.amqp.node"></context:component-scan>
 
 	<bean id="connectionFactory" class="com.rabbitmq.client.ConnectionFactory">

@@ -9,8 +9,12 @@ public class PropagateInputsMessage implements Message {
 	
 	public static final String TYPE="PI";
 	
-	private final long moment;
-	private final Map<String, Integer> netDrivers;
+	private long moment;
+	private Map<String, Integer> netDrivers;
+	
+	public PropagateInputsMessage() {
+		
+	}
 	
 	public PropagateInputsMessage(long moment, Map<String, Integer> netDrivers) {
 		super();
@@ -33,39 +37,5 @@ public class PropagateInputsMessage implements Message {
 		headers.put(TYPE_HEADER, TYPE);
 		headers.put(MOMENT_HEADER, moment);
 		
-	}	
-
-	@Override
-	public byte[] getBytes() {
-		// Format is
-		// netId:drivers,netId:drivers...
-		StringBuffer sb = new StringBuffer();
-		boolean first = true;
-		for(String netId : netDrivers.keySet()) {
-			
-			if(!first) {
-				sb.append(",");
-			} else {
-				first = false;
-			}
-			
-			sb.append(netId);
-			sb.append(":");
-			sb.append(netDrivers.get(netId));
-		}
-		
-		return sb.toString().getBytes();
 	}
-	
-	public static PropagateInputsMessage read(Map<String, Object> headers, byte[] bytes) {
-		Map<String, Integer> netDrivers = new HashMap<String, Integer>();
-		String[] pairs = new String(bytes).split(",");
-		for(String pair : pairs) {
-			String[] bits = pair.split(":");
-			netDrivers.put(bits[0],  Integer.parseInt(bits[1]));
-		}
-		
-		return new PropagateInputsMessage(Long.parseLong((String)headers.get(MOMENT_HEADER)), netDrivers);
-	}
-
 }

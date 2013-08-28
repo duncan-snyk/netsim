@@ -10,11 +10,15 @@ public class ScheduledValue {
 	/**
 	 * The moment at which the value is scheduled to take effect
 	 */
-	private final long moment;
+	private long moment;
 	
-	private final SignalValue value;
+	private SignalValue value;
 	
 	private ScheduledValue next;
+	
+	public ScheduledValue() {
+		
+	}
 
 	public ScheduledValue(long moment, SignalValue value) {
 		super();
@@ -36,5 +40,18 @@ public class ScheduledValue {
 
 	public SignalValue getValue() {
 		return value;
-	}	
+	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append(moment);
+		sb.append(":");
+		sb.append(value.toString());
+		return sb.toString();
+	}
+	
+	public static ScheduledValue fromString(String string) throws Exception {
+		String[] bits = string.split(":");
+		return new ScheduledValue(Long.parseLong(bits[0]), SignalValue.fromChar(bits[1].charAt(0)));
+	}
 }

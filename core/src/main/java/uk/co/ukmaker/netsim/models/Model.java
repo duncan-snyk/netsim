@@ -148,5 +148,13 @@ abstract public class Model {
 		sb.append("]\n");
 		return sb.toString();
 	}
+	
+	public Map<String, String> getParameters() {
+		return new HashMap<String, String>();
+	}
+	
+	public void setParameters(Map<String, String> params) throws Exception {
+		//
+	}
 
 }

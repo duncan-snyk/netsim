@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.codehaus.jackson.map.ObjectMapper;
+
 import uk.co.ukmaker.netsim.amqp.messages.Message;
 import uk.co.ukmaker.netsim.amqp.messages.node.InitialiseModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
@@ -29,6 +31,8 @@ public class ClusterNode {
 	private final long ramSize;
 	
 	private final ExecutorService pool = Executors.newFixedThreadPool(4);
+	
+	private final ObjectMapper mapper = new ObjectMapper();
 	
 	public ClusterNode(Channel channel, String exchangeName, String name, long ramSize) {
 		super();
@@ -84,7 +88,8 @@ public class ClusterNode {
 		.headers(headers)
 		.build();
 
-		channel.basicPublish(exchangeName, routingKey, props, m.getBytes());
+		
+		channel.basicPublish(exchangeName, routingKey, props, mapper.writeValueAsBytes(m));//m.getBytes());
 	}
 	
 	protected Future<Message> sendAndReceive(Message m) throws IOException {
@@ -101,7 +106,7 @@ public class ClusterNode {
 		.headers(headers)
 		.build();
 
-		channel.basicPublish(exchangeName, routingKey, props, m.getBytes());
+		channel.basicPublish(exchangeName, routingKey, props, mapper.writeValueAsBytes(m)); // m.getBytes());
 		// We need to return a Future, so fire up a Callable which loops
 		// on basic.get until we've got the response
 		

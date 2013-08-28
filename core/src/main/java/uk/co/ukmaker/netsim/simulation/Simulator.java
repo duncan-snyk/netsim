@@ -189,7 +189,7 @@ public class Simulator implements NetEventPropagator {
 				i=0;
 				sb.append(String.format("\n%9s ", "ERROR"));
 				for (TestProbe probe : probes) {
-					SignalValue v = probe.getExpectedValue(moment);
+					SignalValue v = probe.getExpectedValue();
 					sb.append(String.format(formats.get(i++), v == null ? "" : v));
 				}
 			}

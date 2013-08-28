@@ -1,22 +1,6 @@
 package uk.co.ukmaker.netsim.parser;
 
-import static uk.co.ukmaker.netsim.parser.Parser.State.COMPONENT;
-import static uk.co.ukmaker.netsim.parser.Parser.State.DONE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.ENTITY;
-import static uk.co.ukmaker.netsim.parser.Parser.State.EXPECT;
-import static uk.co.ukmaker.netsim.parser.Parser.State.GENERATE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.IDLE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.INCLUDE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.INPUT;
-import static uk.co.ukmaker.netsim.parser.Parser.State.NET;
-import static uk.co.ukmaker.netsim.parser.Parser.State.NET_OR_END;
-import static uk.co.ukmaker.netsim.parser.Parser.State.OUTPUT;
-import static uk.co.ukmaker.netsim.parser.Parser.State.PORT_OR_COMPONENT;
-import static uk.co.ukmaker.netsim.parser.Parser.State.PROBE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.SIMULATE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.SOURCE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.SOURCE_OR_PROBE;
-import static uk.co.ukmaker.netsim.parser.Parser.State.VECTORS;
+import static uk.co.ukmaker.netsim.parser.Parser.State.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -62,6 +46,8 @@ public class Parser {
 	private String[]  tokens;
 	private int idx;
 	
+	private int step = 1;
+	
 	private static Pattern portNamePattern = Pattern.compile("([a-zA-Z0-9_]+)(\\[([0-9]+)\\])?");
 	
 	Circuit circuit = null;
@@ -101,6 +87,7 @@ public class Parser {
 		COMPONENT,
 		NET_OR_END,
 		NET,
+		STEP,
 		GENERATE,
 		EXPECT,
 		VECTORS,
@@ -268,6 +255,8 @@ public class Parser {
 					state = SOURCE;
 				} else if("probe".equals(tok)) {
 					state = PROBE;
+				} else if("step".equals(tok)) {
+					state = STEP;
 				} else if("generate".equals(tok)) {
 					state = GENERATE;
 				} else {
@@ -394,6 +383,11 @@ public class Parser {
 				}
 				break;
 				
+			case STEP:
+				step = Integer.parseInt(tok);
+				state = SOURCE_OR_PROBE;
+				break;
+				
 			case GENERATE:
 				// A list of signal names
 				ungetToken();
@@ -429,7 +423,7 @@ public class Parser {
 					
 				} else if(tok.startsWith("@")) {
 					tok = tok.substring(1);
-					moment = Long.parseLong(tok);
+					moment = Long.parseLong(tok) * step;
 					List<String> vectors = new ArrayList<String>();
 					while(more()) {
 						tok = getToken();
@@ -530,15 +524,21 @@ public class Parser {
 		
 		int i=0;
 		
+		System.out.print("@"+moment);
+		
 		for(String generateName : generateClipNames) {
 			SignalValue v = exploded.get(i++);
 			((TestFixture)circuit).generate(moment, generateName, v);
+			System.out.print(" "+v);
 		}
 		
 		for(String expectName : expectClipNames) {
 			SignalValue v = exploded.get(i);
 			((TestFixture)circuit).expect(moment, expectName, v);
+			System.out.print(" "+v);
 		}
+		
+		System.out.println();
 	}
 	
 	public List<SignalValue> explodeVectors(List<String> vectors) throws Exception {

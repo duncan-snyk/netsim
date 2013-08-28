@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import uk.co.ukmaker.netsim.amqp.node.RemoteNode;
+
 /*
  * Main control loop for a cluster node
  * 
@@ -68,6 +70,10 @@ public class Main {
     				
     				master.installModels();
     				
+    			} else if("connectNets".equals(bits[0])) {
+    				
+    				master.connectNets();
+    				
     			} else if("initialiseModels".equals(bits[0])) {
     				
     				master.initialiseModels();
@@ -95,6 +101,8 @@ public class Main {
     				
     				master.installModels();
     				
+    				master.connectNets();
+    				
     				master.simulate();
     				
     			} else if("help".equals(bits[0])) {
@@ -103,6 +111,7 @@ public class Main {
     				System.out.println("enumerate");
     				System.out.println("load <fileName>");
     				System.out.println("installModels");
+    				System.out.println("connectNets");
     				System.out.println("initialiseModels");
     				System.out.println("run <fileName>");
     				System.out.println("simulate");

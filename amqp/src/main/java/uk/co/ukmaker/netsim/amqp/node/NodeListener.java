@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +54,8 @@ public class NodeListener implements NetEventPropagator {
 	private Consumer nodeCallback;
 	private String nodeQueueName;
 	private String netsExchangeName;
+	
+	private ObjectMapper mapper = new ObjectMapper();
 
 	public void initialise() throws Exception {
 		
@@ -69,9 +72,6 @@ public class NodeListener implements NetEventPropagator {
 			public void handleDelivery(String consumerTag, Envelope envelope,
 					BasicProperties properties, byte[] body) throws IOException {
 				
-				String message = new String(body);
-				System.out.println("Processing node message: "+message);
-
 				try {
 					Message reply = onNodeMessage(properties, body);
 					if(reply != null) {
@@ -84,7 +84,7 @@ public class NodeListener implements NetEventPropagator {
 						.headers(replyHeaders)
 						.build();
 						
-						nodeChannel.basicPublish("", properties.getReplyTo(), replyProps, reply.getBytes());
+						nodeChannel.basicPublish("", properties.getReplyTo(), replyProps, mapper.writeValueAsBytes(reply)); //reply.getBytes());
 					}
 				} catch (Exception e) {
 					throw new IOException("Error handling message", e);
@@ -101,25 +101,26 @@ public class NodeListener implements NetEventPropagator {
 	public Message onNodeMessage(BasicProperties properties, byte[] body) throws Exception {
 	
 		String type = properties.getHeaders().get(Message.TYPE_HEADER).toString();
-		
+		System.out.println("Processing node message of type: "+type);
+	
 		if(InitialiseModelsMessage.TYPE.equals(type)) {
-			return initialiseModels(InitialiseModelsMessage.read(properties.getHeaders(), body));
+			return initialiseModels(mapper.readValue(body,InitialiseModelsMessage.class));//.read(properties.getHeaders(), body));
 		}
 		
 		if(PropagateInputsMessage.TYPE.equals(type)) {
-			return propagateInputs(PropagateInputsMessage.read(properties.getHeaders(), body));
+			return propagateInputs(mapper.readValue(body,PropagateInputsMessage.class));//.read(properties.getHeaders(), body));
 		}
 		
 		if(PropagateOutputsMessage.TYPE.equals(type)) {
-			return propagateOutputs(PropagateOutputsMessage.read(properties.getHeaders(), body));
+			return propagateOutputs(mapper.readValue(body,PropagateOutputsMessage.class));//.read(properties.getHeaders(), body));
 		}
 		
 		if(UpdateModelsMessage.TYPE.equals(type)) {
-			return updateModels(UpdateModelsMessage.read(properties.getHeaders(), body));
+			return updateModels(mapper.readValue(body,UpdateModelsMessage.class));//.read(properties.getHeaders(), body));
 		}
 		
 		if(InstallModelMessage.TYPE.equals(type)) {
-			return installModel(InstallModelMessage.read(properties.getHeaders(), body));
+			return installModel(mapper.readValue(body,InstallModelMessage.class));//.read(properties.getHeaders(), body));
 		}
 		
 		throw new Exception("Unknown message type "+type+" received by NodeListener");
@@ -145,12 +146,13 @@ public class NodeListener implements NetEventPropagator {
 		return new UpdateEventQueueMessage(nextEvents);
 	}
 
-	public Message installModel(InstallModelMessage installModelMessage) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+	public Message installModel(InstallModelMessage installModelMessage) throws Exception {
 		
 		Model model = (Model)Class.forName(installModelMessage.getClassName()).newInstance();
 		
 		model.setUnitId(installModelMessage.getUnitId());
 		model.setName(installModelMessage.getName());
+		model.setParameters(installModelMessage.getParameters());
 		
 		node.addModel(model);
 		
@@ -174,7 +176,7 @@ public class NodeListener implements NetEventPropagator {
 		.headers(headers)
 		.build();
 
-		netsChannel.basicPublish(netsExchangeName, netId, props, m.getBytes());	
+		netsChannel.basicPublish(netsExchangeName, netId, props, mapper.writeValueAsBytes(m));//m.getBytes());	
 		
 	}
 }

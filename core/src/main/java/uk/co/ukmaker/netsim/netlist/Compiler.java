@@ -97,11 +97,7 @@ public class Compiler {
 		Model model = d.getModel();
 		models.put(d, model);
 		netlist.addModel(model);
-		
-		if(model instanceof TestProbe) {
-			netlist.addTestProbe((TestProbe)model);
-		}
-		
+
 		return model;
 	}
 }

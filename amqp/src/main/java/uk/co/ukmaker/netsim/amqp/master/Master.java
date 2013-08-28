@@ -11,11 +11,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import uk.co.ukmaker.netsim.amqp.Routing;
 import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage;
+import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage.Type;
+import uk.co.ukmaker.netsim.amqp.messages.discovery.EnumeratedMessage;
+import uk.co.ukmaker.netsim.amqp.node.RemoteNode;
 import uk.co.ukmaker.netsim.models.test.TestProbe;
 import uk.co.ukmaker.netsim.netlist.Compiler;
 import uk.co.ukmaker.netsim.netlist.Netlist;
@@ -50,6 +56,9 @@ public class Master {
 	@Autowired
 	ConnectionFactory connectionFactory;
 	
+	@Autowired
+	RemoteNode localNode;
+	
 	Channel broadcastChannel;
 	Channel discoveryChannel;
 	Channel nodeChannel;
@@ -67,7 +76,11 @@ public class Master {
 	private Simulator simulator;
 	private NetEventPropagator handler;
 	
-	public void initialize() throws IOException {
+	private ObjectMapper mapper = new ObjectMapper();
+
+	public void initialize() throws Exception {
+		
+		localNode.initialise();
 		
 		broadcastChannel = connectionFactory.newConnection().createChannel();
 		broadcastChannel.exchangeDeclare(routing.getBroadcastExchangeName(), "fanout");
@@ -106,7 +119,7 @@ public class Master {
 		// crufty. Discovery gives the nodes one second to reply
 		QueueingConsumer.Delivery delivery;
 		while((delivery = consumer.nextDelivery(routing.getDiscoveryTimeout())) != null) {
-			ClusterNode node = readClusterNode(new String(delivery.getBody()));
+			ClusterNode node = readClusterNode(delivery.getBody());
 			cluster.getNodes().add(node);
 		}
 		
@@ -117,9 +130,10 @@ public class Master {
 	
 	
 	// Deserialize from wire format which is "name:ramSize"
-	public ClusterNode readClusterNode(String serialized) {
-		String[]  bits = serialized.split(":");
-		return new ClusterNode(nodeChannel, routing.getNodesExchangeName(), bits[0], Integer.parseInt(bits[1]));
+	public ClusterNode readClusterNode(byte[] bytes) throws Exception {
+		
+		EnumeratedMessage m = mapper.readValue(bytes, EnumeratedMessage.class);
+		return new ClusterNode(nodeChannel, routing.getNodesExchangeName(), m.getName(), m.getRamSize());
 		
 	}
 	
@@ -129,6 +143,10 @@ public class Master {
 	
 	public void resetAll() throws Exception {
 		broadcast(new BroadcastMessage(RESET));
+	}
+	
+	public void connectNets() throws Exception {
+		broadcast(new BroadcastMessage(Type.CONNECT_NETS));
 	}
 	
 	public void broadcast(BroadcastMessage message) throws IOException {
@@ -141,7 +159,7 @@ public class Master {
 		.headers(headers)
 		.build();
 
-		byte[] bytes = message.getBytes();
+		byte[] bytes = mapper.writeValueAsBytes(message);
 		
 		broadcastChannel.basicPublish(routing.getBroadcastExchangeName(), "", props, bytes);
 	}
@@ -174,7 +192,7 @@ public class Master {
 	}
 	
 	public void installModels() throws Exception {
-		driver.installModels(cluster);
+		driver.installModels(cluster, localNode);
 	}
 	
 	public void initialiseModels() throws Exception {
@@ -182,6 +200,6 @@ public class Master {
 	}
 	
 	public void simulate() throws Exception {
-		simulator.simulate(netlist, simulationEnd, testProbes);
+		simulator.simulate(netlist, simulationEnd, localNode.getNode().getNetlist().getTestProbes());
 	}
 }
