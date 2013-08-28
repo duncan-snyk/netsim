@@ -30,7 +30,7 @@ public class ClusterNode {
 	private final String name;
 	private final long ramSize;
 	
-	private final ExecutorService pool = Executors.newFixedThreadPool(4);
+	private final ExecutorService pool = Executors.newFixedThreadPool(40);
 	
 	private final ObjectMapper mapper = new ObjectMapper();
 	
@@ -121,6 +121,8 @@ public class ClusterNode {
 				while((r = channel.basicGet(replyQueue, true)) == null) {
 					// loop
 				}
+				
+				channel.queueDelete(replyQueue);
 				
 				return NodeReplyMessageFactory.decode(node, r.getProps().getHeaders(), r.getBody());
 				

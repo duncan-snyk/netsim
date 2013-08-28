@@ -84,7 +84,7 @@ public class NodeListener implements NetEventPropagator {
 						.headers(replyHeaders)
 						.build();
 						
-						nodeChannel.basicPublish("", properties.getReplyTo(), replyProps, mapper.writeValueAsBytes(reply)); //reply.getBytes());
+						nodeChannel.basicPublish("", properties.getReplyTo(), replyProps, mapper.writeValueAsBytes(reply));
 					}
 				} catch (Exception e) {
 					throw new IOException("Error handling message", e);
@@ -101,26 +101,26 @@ public class NodeListener implements NetEventPropagator {
 	public Message onNodeMessage(BasicProperties properties, byte[] body) throws Exception {
 	
 		String type = properties.getHeaders().get(Message.TYPE_HEADER).toString();
-		System.out.println("Processing node message of type: "+type);
+//		System.out.println("Processing node message of type: "+type);
 	
 		if(InitialiseModelsMessage.TYPE.equals(type)) {
-			return initialiseModels(mapper.readValue(body,InitialiseModelsMessage.class));//.read(properties.getHeaders(), body));
+			return initialiseModels(mapper.readValue(body,InitialiseModelsMessage.class));
 		}
 		
 		if(PropagateInputsMessage.TYPE.equals(type)) {
-			return propagateInputs(mapper.readValue(body,PropagateInputsMessage.class));//.read(properties.getHeaders(), body));
+			return propagateInputs(mapper.readValue(body,PropagateInputsMessage.class));
 		}
 		
 		if(PropagateOutputsMessage.TYPE.equals(type)) {
-			return propagateOutputs(mapper.readValue(body,PropagateOutputsMessage.class));//.read(properties.getHeaders(), body));
+			return propagateOutputs(mapper.readValue(body,PropagateOutputsMessage.class));
 		}
 		
 		if(UpdateModelsMessage.TYPE.equals(type)) {
-			return updateModels(mapper.readValue(body,UpdateModelsMessage.class));//.read(properties.getHeaders(), body));
+			return updateModels(mapper.readValue(body,UpdateModelsMessage.class));
 		}
 		
 		if(InstallModelMessage.TYPE.equals(type)) {
-			return installModel(mapper.readValue(body,InstallModelMessage.class));//.read(properties.getHeaders(), body));
+			return installModel(mapper.readValue(body,InstallModelMessage.class));
 		}
 		
 		throw new Exception("Unknown message type "+type+" received by NodeListener");
@@ -176,7 +176,7 @@ public class NodeListener implements NetEventPropagator {
 		.headers(headers)
 		.build();
 
-		netsChannel.basicPublish(netsExchangeName, netId, props, mapper.writeValueAsBytes(m));//m.getBytes());	
+		netsChannel.basicPublish(netsExchangeName, netId, props, mapper.writeValueAsBytes(m));
 		
 	}
 }

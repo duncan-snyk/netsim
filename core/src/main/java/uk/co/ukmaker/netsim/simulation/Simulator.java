@@ -30,6 +30,8 @@ public class Simulator implements NetEventPropagator {
 	
 	private long lastmoment = -1;
 	
+	private int printed = 0;
+	
 	public void setNetlistDriver(NetlistDriver driver) {
 		this.driver = driver;
 	}
@@ -174,6 +176,13 @@ public class Simulator implements NetEventPropagator {
 		int i = 0;
 		
 		boolean hasErrors = false;
+		
+		if(printed == 20) {
+			printHeaders();
+			printed = 0;
+		}
+		
+		printed++;
 
 		if (probes.size() > 0) {
 			StringBuffer sb = new StringBuffer();

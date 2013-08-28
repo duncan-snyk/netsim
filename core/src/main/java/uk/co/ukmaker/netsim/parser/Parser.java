@@ -524,21 +524,15 @@ public class Parser {
 		
 		int i=0;
 		
-		System.out.print("@"+moment);
-		
 		for(String generateName : generateClipNames) {
 			SignalValue v = exploded.get(i++);
 			((TestFixture)circuit).generate(moment, generateName, v);
-			System.out.print(" "+v);
 		}
 		
 		for(String expectName : expectClipNames) {
 			SignalValue v = exploded.get(i);
 			((TestFixture)circuit).expect(moment, expectName, v);
-			System.out.print(" "+v);
 		}
-		
-		System.out.println();
 	}
 	
 	public List<SignalValue> explodeVectors(List<String> vectors) throws Exception {

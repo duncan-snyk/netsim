@@ -66,7 +66,6 @@ public class NetsListener {
 	
 	public void onNetsMessage(BasicProperties properties, byte[] bytes) throws Exception {
 		ScheduleNetValueMessage m = mapper.readValue(bytes, ScheduleNetValueMessage.class);
-		System.out.println(String.format("Scheduling net value %s = %s",m.getNetId(), m.getValue()));
 		node.getNetlistDriver().scheduleNetValue(m.getNetId(), m.getValue());
 	}
 
