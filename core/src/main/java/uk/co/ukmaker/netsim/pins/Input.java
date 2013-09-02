@@ -27,6 +27,6 @@ public interface Input {
 	public boolean hasScheduledValue(long moment);
 	public boolean hasScheduledValue(long moment, int drivers);
 
-	public void await(long moment, int drivers);
+	public void await(long moment, int drivers) throws InterruptedException;
 
 }

@@ -19,6 +19,7 @@ expect sum[8] cout
 global $moment;
 $moment = 0;
 
+
 for($a=0; $a<256; $a++) {
 	for($b=0; $b<256; $b++) {
 		for($c=0; $c<2; $c++) {

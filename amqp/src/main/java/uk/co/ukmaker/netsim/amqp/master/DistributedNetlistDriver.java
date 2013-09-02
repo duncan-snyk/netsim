@@ -30,7 +30,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	private ClusterData cluster;
 	
 	// Keep track of which nodes have which nets
-	private Map<String, Set<ClusterNode>> netNodeMap;
+	private Map<ClusterNode, Set<String>> netNodeMap;
 	
 	@Override
 	public void setNetlist(Netlist netlist) {
@@ -50,7 +50,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		ClusterNode localClusterNode = cluster.getNode(localNode.getNode().getName());
 		
 		this.cluster = cluster;
-		netNodeMap = new HashMap<String, Set<ClusterNode>>();
+		netNodeMap = new HashMap<ClusterNode, Set<String>>();
 		
 		List<Model> models = netlist.getModels();
 		List<TestProbe> testProbes = netlist.getTestProbes();
@@ -113,10 +113,10 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	public void installModel(Model m, ClusterNode n) throws Exception {
 		Future<Message> ack = n.installModel(m);
 		for(Net net : m.getNets()) {
-			if(!netNodeMap.containsKey(net.getId())) {
-				netNodeMap.put(net.getId(),  new HashSet<ClusterNode>());
+			if(!netNodeMap.containsKey(n)) {
+				netNodeMap.put(n,  new HashSet<String>());
 			}
-			netNodeMap.get(net.getId()).add(n);
+			netNodeMap.get(n).add(net.getId());
 		}
 		
 		ack.get();
@@ -153,16 +153,19 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	public Map<String, Integer> propagateOutputs(long moment, Set<String> netIds,
 			NetEventPropagator propagator) throws Exception {
 		
-		// Broadcast the list of nets to all the nodes.
-		
-		// It might be more appropriate to
-		// construct an appropriate message for each node in the cluster
-		// just telling them to update the nets they know about
-		
-		PropagateOutputsMessage m = new PropagateOutputsMessage(moment, netIds);
 		List<Future<Message>> responses = new ArrayList<>();
 		for(ClusterNode n : cluster.getNodes()) {
-			responses.add(n.propagateOutputs(m));
+			Set<String> nodeNets = new HashSet<String>();
+			for(String netId : netIds) {
+				if(netNodeMap.get(n).contains(netId)) {
+					nodeNets.add(netId);
+				}
+			}
+			
+			if(nodeNets.size() > 0) {
+				PropagateOutputsMessage m = new PropagateOutputsMessage(moment, nodeNets);
+				responses.add(n.propagateOutputs(m));
+			}
 		}
 		
 		// gather up the results as they come in
@@ -186,12 +189,22 @@ public class DistributedNetlistDriver implements NetlistDriver {
 
 	@Override
 	public void propagateInputs(long moment, Map<String, Integer> netDrivers) throws Exception {
-		// Again, we'll just send the list to all the nodes for the moment
-		PropagateInputsMessage m = new PropagateInputsMessage(moment, netDrivers);
+		
 		List<Future<Message>> responses = new ArrayList<>();
 		
 		for(ClusterNode n : cluster.getNodes()) {
-			responses.add(n.propagateInputs(m));
+			
+			Map<String, Integer> nodeNetDrivers = new HashMap<String, Integer>();
+			for(String netId : netDrivers.keySet()) {
+				if(netNodeMap.get(n).contains(netId)) {
+					nodeNetDrivers.put(netId, netDrivers.get(netId));
+				}
+			}
+			
+			if(nodeNetDrivers.size() > 0) {
+				PropagateInputsMessage m = new PropagateInputsMessage(moment, nodeNetDrivers);
+				responses.add(n.propagateInputs(m));
+			}
 		}
 		
 		// wait for the acks

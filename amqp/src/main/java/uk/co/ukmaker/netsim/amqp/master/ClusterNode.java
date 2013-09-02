@@ -29,17 +29,19 @@ public class ClusterNode {
 	private final String exchangeName;
 	private final String name;
 	private final long ramSize;
+	private final String replyQueueName;
 	
 	private final ExecutorService pool = Executors.newFixedThreadPool(40);
 	
 	private final ObjectMapper mapper = new ObjectMapper();
 	
-	public ClusterNode(Channel channel, String exchangeName, String name, long ramSize) {
+	public ClusterNode(Channel channel, String exchangeName, String name, long ramSize) throws Exception {
 		super();
 		this.channel = channel;
 		this.exchangeName = exchangeName;
 		this.name = name;
 		this.ramSize = ramSize;
+		this.replyQueueName  = channel.queueDeclare().getQueue();
 	}
 	
 	public String getName() {
@@ -94,15 +96,13 @@ public class ClusterNode {
 	
 	protected Future<Message> sendAndReceive(Message m) throws IOException {
 		
-		final String replyQueue = channel.queueDeclare().getQueue();
-		
 		String routingKey = getName();
 		
 		Map<String, Object> headers = new HashMap<String, Object>();
 		m.populateHeaders(headers);
 		
 		BasicProperties props = new BasicProperties.Builder()
-		.replyTo(replyQueue)
+		.replyTo(replyQueueName)
 		.headers(headers)
 		.build();
 
@@ -118,15 +118,38 @@ public class ClusterNode {
 			public Message call() throws Exception {
 				GetResponse r;
 				
-				while((r = channel.basicGet(replyQueue, true)) == null) {
+				while((r = channel.basicGet(replyQueueName, true)) == null) {
 					// loop
 				}
-				
-				channel.queueDelete(replyQueue);
-				
+								
 				return NodeReplyMessageFactory.decode(node, r.getProps().getHeaders(), r.getBody());
 				
 			}
 		});
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ClusterNode other = (ClusterNode) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
 	}
 }

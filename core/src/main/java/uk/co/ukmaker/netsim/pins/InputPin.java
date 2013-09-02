@@ -46,14 +46,7 @@ public class InputPin extends Pin implements Input {
 		return queue.getScheduledDrivers(moment) == drivers;
 	}
 	
-	public void await(long moment, int drivers) {
-		while(!hasScheduledValue(moment, drivers)) { 
-    		try {
-    			Thread.sleep(0, 100);
-    		} catch (InterruptedException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		} 
-		}
+	public void await(long moment, int drivers) throws InterruptedException {
+		queue.await(moment, drivers);
 	}
 }

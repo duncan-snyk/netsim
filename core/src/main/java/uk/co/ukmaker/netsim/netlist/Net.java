@@ -99,7 +99,7 @@ public class Net {
 		return sb.toString();
 	}
 
-	public void await(long moment, int numDrivers) {
+	public void await(long moment, int numDrivers) throws InterruptedException {
 		for(InputPin p : getSinks()) {
 			p.await(moment, numDrivers);
 		}

@@ -80,8 +80,6 @@ public class Master {
 
 	public void initialize() throws Exception {
 		
-		localNode.initialise();
-		
 		broadcastChannel = connectionFactory.newConnection().createChannel();
 		broadcastChannel.exchangeDeclare(routing.getBroadcastExchangeName(), "fanout");
 		broadcastChannel.basicQos(1);
@@ -103,6 +101,9 @@ public class Master {
 		simulator = new Simulator();
 		simulator.setNetlistDriver(driver);
 		handler = new DistributedCallbackHandler();
+		
+		localNode.initialise();
+		
 	}
 	
 

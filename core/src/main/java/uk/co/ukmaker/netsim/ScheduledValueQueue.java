@@ -1,9 +1,19 @@
 package uk.co.ukmaker.netsim;
 
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class ScheduledValueQueue {
 	
 	private Schedule head;
 	private Schedule tail;
+	
+	private ReentrantLock lock = new ReentrantLock();
+	private Condition awaitingDrivers = lock.newCondition();
+	
+	private boolean awaiting = false;
+	private long awaitedMoment = 0;
+	private int awaitedDrivers = 0;
 	
 	public static class Schedule {
 		
@@ -20,16 +30,20 @@ public class ScheduledValueQueue {
 	public void schedule(ScheduledValue value) {
 		// Since we expect values to be scheduled in order, start at the tail and work back
 		
+		lock.lock();
+		
+		try {
+		
 		Schedule s = new Schedule(value);
 		
 		if(head == null) {
 			head = s;
 			tail = s;
+			signal(s);
 			return;
 		}
 		
 		Schedule l = tail;
-		Schedule r = null;
 		
 		while(l != null) {
 			
@@ -37,6 +51,7 @@ public class ScheduledValueQueue {
 			if(l.value.getMoment() == value.getMoment()) {
 				l.drivers++;
 				l.value = new ScheduledValue(value.getMoment(), SignalValue.X);
+				signal(l);
 				return;
 			}
 			
@@ -53,10 +68,10 @@ public class ScheduledValueQueue {
 					s.prev = l;
 					s.next.prev = s;
 				}
+				signal(s);
 				return;
 			}
 			
-			r=l;
 			l=l.prev;
 		}
 		
@@ -64,6 +79,18 @@ public class ScheduledValueQueue {
 		s.next = head;
 		head.prev = s;
 		head = s;
+		
+		signal(s);
+		
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	protected void signal(Schedule s) {
+		if(awaiting && s.value.getMoment() == awaitedMoment && awaitedDrivers == s.drivers) {
+			awaitingDrivers.signal();
+		}		
 	}
 	
 	public ScheduledValue head() {
@@ -150,6 +177,25 @@ public class ScheduledValueQueue {
 		}
 		
 		return 0;
+	}
+	
+	public void await(long moment, int drivers) throws InterruptedException {
+		
+		lock.lock();
+		
+		try {
+		awaitedMoment = moment;
+		awaitedDrivers = drivers;
+		awaiting = true;
+		
+		while(getScheduledDrivers(moment) != drivers) {
+			awaitingDrivers.await();
+		}
+		
+		} finally {
+			lock.unlock();
+		}
+		
 	}
 	
 	public String toString() {
