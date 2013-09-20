@@ -4,16 +4,16 @@ import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
 public class NodeReplyMessageFactory {
 	
 	private static ObjectMapper mapper = new ObjectMapper();
 
-	public static Message decode(Map<String, Object> headers,
+	public static NetsimMessage decode(Map<String, Object> headers,
 			byte[] bytes)  throws Exception {
 		
-		String type = headers.get(Message.TYPE_HEADER).toString();
+		String type = headers.get(NetsimMessage.TYPE_HEADER).toString();
 		
 		if(PropagatedNetDriversMessage.TYPE.equals(type)) {
 			

@@ -2,9 +2,9 @@ package uk.co.ukmaker.netsim.amqp.messages.broadcast;
 
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
-public class BroadcastMessage implements Message {
+public class BroadcastMessage implements NetsimMessage {
 	
 	private Type type;
 	

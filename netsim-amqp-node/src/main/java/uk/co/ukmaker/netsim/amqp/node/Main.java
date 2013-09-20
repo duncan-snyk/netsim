@@ -18,7 +18,7 @@ public class Main {
 	 */
 	public static void main(String[] args) throws Exception {
 		
-		ApplicationContext ctx = new ClassPathXmlApplicationContext("node-context.xml");
+		ApplicationContext ctx = new ClassPathXmlApplicationContext("node-template-context.xml");
 		
 		RemoteNode remoteNode = ctx.getBean(RemoteNode.class);
 		

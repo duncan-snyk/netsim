@@ -3,7 +3,6 @@ package uk.co.ukmaker.netsim.amqp.node;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import uk.co.ukmaker.netsim.models.Model;
@@ -11,7 +10,6 @@ import uk.co.ukmaker.netsim.netlist.Net;
 import uk.co.ukmaker.netsim.netlist.Netlist;
 import uk.co.ukmaker.netsim.pins.Pin;
 import uk.co.ukmaker.netsim.simulation.LocalNetlistDriver;
-import uk.co.ukmaker.netsim.simulation.NetlistDriver;
 
 @Component
 public class Node {

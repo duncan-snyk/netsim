@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,6 @@ import uk.co.ukmaker.netsim.amqp.messages.netlist.ScheduleNetValueMessage;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
@@ -41,10 +41,10 @@ public class RoutedNetsListener implements NetsListener {
 		
 		netsQueueName = routing.getNetsQueueName(node.getName());
 		
-		netsChannel = connectionFactory.newConnection().createChannel();
+		netsChannel = connectionFactory.createConnection().createChannel(false);
 		netsChannel.exchangeDeclare(routing.getNetsExchangeName(), "topic");
 		netsChannel.queueDeclare(netsQueueName, false, true, true, null);
-		netsChannel.basicQos(1);
+	//	netsChannel.basicQos(1);
 		System.out.println("Connecting to nets exchange as q "+netsQueueName);
 
 		netsCallback = new DefaultConsumer(netsChannel) {

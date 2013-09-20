@@ -17,15 +17,25 @@
 	Service context for a netsim Node
 	 -->
 	 
-	 <context:property-placeholder location="classpath:cluster.properties,classpath:master.properties" />
+	 <context:property-placeholder location="classpath:master.properties" />
 
 	<context:component-scan base-package="uk.co.ukmaker.netsim.amqp.master"></context:component-scan>
 		<context:component-scan base-package="uk.co.ukmaker.netsim.amqp.node"></context:component-scan>
 	
-	<bean id="connectionFactory" class="com.rabbitmq.client.ConnectionFactory">
-		<property name="host" value="ubuntu-G"/>
+	<rabbit:connection-factory id="connectionFactory" host="${rabbitmq.host}" port="${rabbitmq.port}" requested-heartbeat="10"/>
+	<!--<bean id="connectionFactory" class="com.rabbitmq.client.ConnectionFactory">
+		<property name="host" value="${rabbitmq.host}"/>
+		<property name="requestedHeartbeat" value="10"/>
 	</bean>
-	
+	-->
 	<bean id="routing" class="uk.co.ukmaker.netsim.amqp.Routing" />
+	
+	<rabbit:admin connection-factory="connectionFactory"></rabbit:admin>
+	<rabbit:template 
+	id="template"
+	connection-factory="connectionFactory"
+	message-converter="converter"/>
+	
+	<bean id="converter" class="org.springframework.amqp.support.converter.Jackson2JsonMessageConverter"/>
 
 </beans>

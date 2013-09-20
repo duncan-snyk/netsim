@@ -20,8 +20,8 @@ global $moment;
 $moment = 0;
 
 
-for($a=0; $a<16; $a++) {
-	for($b=0; $b<16; $b++) {
+for($a=0; $a<256; $a++) {
+	for($b=0; $b<256; $b++) {
 		for($c=0; $c<2; $c++) {
 			expect($c, $a, $b, ($a+$b+$c) & 255, ($a+$b+$c) > 255 ? 1 : 0);
 		}

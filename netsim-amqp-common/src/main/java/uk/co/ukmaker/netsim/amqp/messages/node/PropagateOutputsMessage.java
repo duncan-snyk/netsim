@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
-public class PropagateOutputsMessage implements Message {
+public class PropagateOutputsMessage implements NetsimMessage {
 	
 	public static final String TYPE = "PO";
 

@@ -3,9 +3,9 @@ package uk.co.ukmaker.netsim.amqp.messages.nodereply;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
-public class PropagatedNetDriversMessage implements Message {
+public class PropagatedNetDriversMessage implements NetsimMessage {
 	
 	public static final String TYPE = "PND";
 	

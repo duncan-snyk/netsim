@@ -1,48 +1,26 @@
 package uk.co.ukmaker.netsim.amqp.master;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 import java.util.concurrent.Future;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InitialiseModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateInputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.UpdateModelsMessage;
-import uk.co.ukmaker.netsim.amqp.messages.nodereply.NodeReplyMessageFactory;
 import uk.co.ukmaker.netsim.models.Model;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.GetResponse;
-
-public class ClusterNode {
+abstract public class ClusterNode {
 	
-	private final Channel channel;
-	private final String exchangeName;
 	private final String name;
 	private final long ramSize;
-	private final String replyQueueName;
 	
-	private final ExecutorService pool = Executors.newFixedThreadPool(40);
-	
-	private final ObjectMapper mapper = new ObjectMapper();
-	
-	public ClusterNode(Channel channel, String exchangeName, String name, long ramSize) throws Exception {
-		super();
-		this.channel = channel;
-		this.exchangeName = exchangeName;
+	public ClusterNode(String name, long ramSize) {
 		this.name = name;
 		this.ramSize = ramSize;
-		this.replyQueueName  = channel.queueDeclare().getQueue();
 	}
+
 	
 	public String getName() {
 		return name;
@@ -51,82 +29,12 @@ public class ClusterNode {
 	public long getRamSize() {
 		return ramSize;
 	}
-
-
+	
 	@Override
 	public String toString() {
 		return name+':'+ramSize;
 	}
 	
-	public Future<Message>  installModel(Model model) throws IOException {
-		
-		return sendAndReceive(new InstallModelMessage(model));
-	}
-	
-	public Future<Message> initialiseModels() throws IOException {
-		return sendAndReceive(new InitialiseModelsMessage());
-	}
-	
-	public Future<Message> updateModels(long moment) throws IOException {
-		return sendAndReceive(new UpdateModelsMessage(moment));
-	}
-	
-	public Future<Message> propagateOutputs(PropagateOutputsMessage m) throws IOException {
-		return sendAndReceive(m);
-	}
-	
-	public Future<Message> propagateInputs(PropagateInputsMessage m) throws IOException {
-		return sendAndReceive(m);
-	}
-	
-	protected void send(Message m) throws IOException {
-		String routingKey = getName();
-		
-		Map<String, Object> headers = new HashMap<String, Object>();
-		
-		m.populateHeaders(headers);
-		
-		BasicProperties props = new BasicProperties.Builder()
-		.headers(headers)
-		.build();
-
-		
-		channel.basicPublish(exchangeName, routingKey, props, mapper.writeValueAsBytes(m));//m.getBytes());
-	}
-	
-	protected Future<Message> sendAndReceive(Message m) throws IOException {
-		
-		String routingKey = getName();
-		
-		Map<String, Object> headers = new HashMap<String, Object>();
-		m.populateHeaders(headers);
-		
-		BasicProperties props = new BasicProperties.Builder()
-		.replyTo(replyQueueName)
-		.headers(headers)
-		.build();
-
-		channel.basicPublish(exchangeName, routingKey, props, mapper.writeValueAsBytes(m)); // m.getBytes());
-		// We need to return a Future, so fire up a Callable which loops
-		// on basic.get until we've got the response
-		
-		final ClusterNode node = this;
-		
-		return pool.submit(new Callable<Message>() {
-
-			@Override
-			public Message call() throws Exception {
-				GetResponse r;
-				
-				while((r = channel.basicGet(replyQueueName, true)) == null) {
-					// loop
-				}
-								
-				return NodeReplyMessageFactory.decode(r.getProps().getHeaders(), r.getBody());
-				
-			}
-		});
-	}
 
 	@Override
 	public int hashCode() {
@@ -152,4 +60,30 @@ public class ClusterNode {
 			return false;
 		return true;
 	}
+
+	public Future<NetsimMessage>  installModel(Model model) throws Exception {
+		
+		return sendAndReceive(new InstallModelMessage(model));
+	}
+	
+	public Future<NetsimMessage> initialiseModels() throws Exception {
+		return sendAndReceive(new InitialiseModelsMessage());
+	}
+	
+	public Future<NetsimMessage> updateModels(long moment) throws Exception {
+		return sendAndReceive(new UpdateModelsMessage(moment));
+	}
+	
+	public Future<NetsimMessage> propagateOutputs(PropagateOutputsMessage m) throws Exception {
+		return sendAndReceive(m);
+	}
+	
+	public Future<NetsimMessage> propagateInputs(PropagateInputsMessage m) throws Exception {
+		return sendAndReceive(m);
+	}
+	
+	abstract protected void send(NetsimMessage m) throws Exception;
+	
+	abstract protected Future<NetsimMessage> sendAndReceive(NetsimMessage m) throws Exception;
+
 }

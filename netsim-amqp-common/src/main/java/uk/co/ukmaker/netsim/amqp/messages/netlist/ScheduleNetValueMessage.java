@@ -4,9 +4,9 @@ import java.util.Map;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.SignalValue;
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
-public class ScheduleNetValueMessage implements Message {
+public class ScheduleNetValueMessage implements NetsimMessage {
 	
 	public static final String TYPE = "SNV";
 

@@ -2,17 +2,17 @@ package uk.co.ukmaker.netsim.amqp.node;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
 import uk.co.ukmaker.netsim.amqp.Routing;
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 import uk.co.ukmaker.netsim.amqp.messages.netlist.ScheduleNetValueMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InitialiseModelsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.InstallModelMessage;
@@ -27,7 +27,6 @@ import uk.co.ukmaker.netsim.simulation.NetEventPropagator;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
@@ -61,11 +60,11 @@ public class NodeListener implements NetEventPropagator {
 		
 		nodeQueueName = routing.getNodeQueueName(node.getName());
 		
-		nodeChannel = connectionFactory.newConnection().createChannel();
+		nodeChannel = connectionFactory.createConnection().createChannel(false);
 		nodeChannel.exchangeDeclare(routing.getNodesExchangeName(), "direct");
 		nodeChannel.queueDeclare(nodeQueueName, false, true, true, null);
 		nodeChannel.queueBind(nodeQueueName, routing.getNodesExchangeName(), routing.getNodeRoutingKey(node.getName()), null);
-		nodeChannel.basicQos(1);
+	//	nodeChannel.basicQos(1);
 		
 		nodeCallback = new DefaultConsumer(nodeChannel) {
 			@Override
@@ -73,7 +72,7 @@ public class NodeListener implements NetEventPropagator {
 					BasicProperties properties, byte[] body) throws IOException {
 				
 				try {
-					Message reply = onNodeMessage(properties, body);
+					NetsimMessage reply = onNodeMessage(properties, body);
 					if(reply != null) {
 						
 						Map<String, Object> replyHeaders = new HashMap<String, Object>();
@@ -94,13 +93,13 @@ public class NodeListener implements NetEventPropagator {
 
 		nodeChannel.basicConsume(nodeQueueName, true, nodeCallback);
 		
-		netsChannel = connectionFactory.newConnection().createChannel();
+		netsChannel = connectionFactory.createConnection().createChannel(false);
 		netsExchangeName = routing.getNetsExchangeName();
 	}
 	
-	public Message onNodeMessage(BasicProperties properties, byte[] body) throws Exception {
+	public NetsimMessage onNodeMessage(BasicProperties properties, byte[] body) throws Exception {
 	
-		String type = properties.getHeaders().get(Message.TYPE_HEADER).toString();
+		String type = properties.getHeaders().get(NetsimMessage.TYPE_HEADER).toString();
 //		System.out.println("Processing node message of type: "+type);
 	
 		if(InitialiseModelsMessage.TYPE.equals(type)) {
@@ -126,27 +125,27 @@ public class NodeListener implements NetEventPropagator {
 		throw new Exception("Unknown message type "+type+" received by NodeListener");
 	}
 	
-	public Message initialiseModels(InitialiseModelsMessage m) throws Exception {
+	public NetsimMessage initialiseModels(InitialiseModelsMessage m) throws Exception {
 		 Map<String, Set<Long>>  netEvents = node.getNetlistDriver().initialiseModels();
 		return new UpdateEventQueueMessage(netEvents);
 	}
 	
-	public Message propagateInputs(PropagateInputsMessage m) throws Exception {
+	public NetsimMessage propagateInputs(PropagateInputsMessage m) throws Exception {
 		node.getNetlistDriver().propagateInputs(m.getMoment(), m.getNetDrivers());
 		return new SimpleAckMessage();
 	}
 	
-	public Message propagateOutputs(PropagateOutputsMessage m) throws Exception {
+	public NetsimMessage propagateOutputs(PropagateOutputsMessage m) throws Exception {
 		Map<String, Integer> netDrivers = node.getNetlistDriver().propagateOutputs(m.getMoment(), m.getNetIds(), this);
 		return new PropagatedNetDriversMessage(netDrivers);
 	}
 	
-	public Message updateModels(UpdateModelsMessage m) throws Exception {
+	public NetsimMessage updateModels(UpdateModelsMessage m) throws Exception {
 		Map<String, Set<Long>> nextEvents = node.getNetlistDriver().updateModels(m.getMoment());
 		return new UpdateEventQueueMessage(nextEvents);
 	}
 
-	public Message installModel(InstallModelMessage installModelMessage) throws Exception {
+	public NetsimMessage installModel(InstallModelMessage installModelMessage) throws Exception {
 		
 		Model model = (Model)Class.forName(installModelMessage.getClassName()).newInstance();
 		

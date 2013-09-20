@@ -26,10 +26,10 @@ public class EightBitAdderSliceTest extends TestHarness {
 
 		// Here come the test vectors
 		//      CIN    A     B    SUM  CARRY
-		propagationDelay = 100000;
+		propagationDelay = 200000; // the carry chain takes a loong time to propagate since there is no look-ahead
 		expect(   X,    X,X,X,X,X,X,X,X,    X,X,X,X,X,X,X,X,    X,X,X,X,X,X,X,X,    X);
-		for(int a=0; a<256; a++) {
-			for(int b=0; b<256; b++) {
+		for(int a=0; a<256; a+=7) {
+			for(int b=0; b<256; b+=7) {
 				for(int c=0; c<2; c++) {
 					expect(c, a, b, (a+b+c) & 0xff, (a+b+c) > 255 ? 1 : 0);
 				}

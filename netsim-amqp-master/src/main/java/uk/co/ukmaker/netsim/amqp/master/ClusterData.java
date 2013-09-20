@@ -3,6 +3,8 @@ package uk.co.ukmaker.netsim.amqp.master;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.co.ukmaker.netsim.amqp.master.rabbit.RabbitClusterNode;
+
 
 
 public class ClusterData {

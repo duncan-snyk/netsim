@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,6 @@ import uk.co.ukmaker.netsim.amqp.messages.discovery.EnumeratedMessage;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
@@ -39,23 +39,26 @@ public class BroadcastListener {
 	@Autowired
 	private Node node;
 	
-	@Autowired
-	private RoutedNetsListener netsListener;
+	private NetsListener netsListener;
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
+	public void setNetsListener(NetsListener listener) {
+		netsListener = listener;
+	}
+	
 	public void initialise() throws Exception {
 		
-		broadcastChannel = connectionFactory.newConnection().createChannel();
+		broadcastChannel = connectionFactory.createConnection().createChannel(false);
 		broadcastChannel.queueDeclare(routing.getBroadcastQueueName(node.getName()), false, false, false, null);
 		broadcastChannel.queueBind(routing.getBroadcastQueueName(node.getName()), routing.getBroadcastExchangeName(), "");
-		broadcastChannel.basicQos(1);
+		//broadcastChannel.basicQos(1);
 		
 		System.out.println("Connecting to broadcast exchange as q "+routing.getBroadcastQueueName(node.getName()));
 		
-		discoveryChannel = connectionFactory.newConnection().createChannel();
+		discoveryChannel = connectionFactory.createConnection().createChannel(false);
 		discoveryChannel.exchangeDeclare(routing.getDiscoveryExchangeName(), "direct");
-		discoveryChannel.basicQos(1);
+		//discoveryChannel.basicQos(1);
 		
 		Consumer broadcastCallback = new DefaultConsumer(broadcastChannel) {
 			@Override

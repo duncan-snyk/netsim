@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
 
-public class UpdateEventQueueMessage implements Message {
+public class UpdateEventQueueMessage implements NetsimMessage {
 	
 	public static final String TYPE = "UEQ";
 	

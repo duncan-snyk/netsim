@@ -14,10 +14,15 @@ import java.util.Map;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageListener;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import uk.co.ukmaker.netsim.amqp.Routing;
+import uk.co.ukmaker.netsim.amqp.master.rabbit.RabbitClusterNode;
 import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage;
 import uk.co.ukmaker.netsim.amqp.messages.broadcast.BroadcastMessage.Type;
 import uk.co.ukmaker.netsim.amqp.messages.discovery.EnumeratedMessage;
@@ -32,7 +37,6 @@ import uk.co.ukmaker.netsim.simulation.NetEventPropagator;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
 
 /**
@@ -74,98 +78,34 @@ public class Master {
 	private DistributedNetlistDriver driver = new DistributedNetlistDriver();
 	
 	private Simulator simulator;
-	private NetEventPropagator handler;
 	
-	private ObjectMapper mapper = new ObjectMapper();
-
+	@Autowired
+	private ClusterMaster clusterMaster;
+	
 	public void initialize() throws Exception {
-		
-		broadcastChannel = connectionFactory.newConnection().createChannel();
-		broadcastChannel.exchangeDeclare(routing.getBroadcastExchangeName(), "fanout");
-		broadcastChannel.basicQos(1);
-		
-		discoveryChannel = connectionFactory.newConnection().createChannel();
-		discoveryChannel.exchangeDeclare(routing.getDiscoveryExchangeName(), "direct");
-		discoveryChannel.queueDeclare(routing.getDiscoveryQueueName(), false, false, false, null);
-		discoveryChannel.queueBind(routing.getDiscoveryQueueName(), routing.getDiscoveryExchangeName(), "");
-		discoveryChannel.basicQos(1);
-		
-		nodeChannel = connectionFactory.newConnection().createChannel();
-		nodeChannel.exchangeDeclare(routing.getNodesExchangeName(), "direct");
-		nodeChannel.basicQos(1);
-		
-
-		consumer = new QueueingConsumer(discoveryChannel);
-		discoveryChannel.basicConsume(routing.getDiscoveryQueueName(), true, consumer);
 		
 		simulator = new Simulator();
 		simulator.setNetlistDriver(driver);
-		handler = new DistributedCallbackHandler();
 		
-		localNode.getNode().setName("node-master");
-		localNode.initialise();
-
+		clusterMaster.initialize();
 	}
-	
-
 	
 	public ClusterData discoverNodes() throws Exception {
-		
-		cluster = new ClusterData();
-		cluster.setState(ClusterData.State.ENUMERATING);
-		
-		broadcast(new BroadcastMessage(BroadcastMessage.Type.ENUMERATE));
-		
-		// Now consume everything available on the discoveryChannel
-		
-		// crufty. Discovery gives the nodes one second to reply
-		QueueingConsumer.Delivery delivery;
-		while((delivery = consumer.nextDelivery(routing.getDiscoveryTimeout())) != null) {
-			ClusterNode node = readClusterNode(delivery.getBody());
-			cluster.getNodes().add(node);
-		}
-		
-		cluster.setState(ClusterData.State.ENUMERATED);
-		
-		return cluster;
+		return clusterMaster.discoverNodes();
 	}
 	
-	
-	// Deserialize from wire format which is "name:ramSize"
-	public ClusterNode readClusterNode(byte[] bytes) throws Exception {
-		
-		EnumeratedMessage m = mapper.readValue(bytes, EnumeratedMessage.class);
-		return new ClusterNode(nodeChannel, routing.getNodesExchangeName(), m.getName(), m.getRamSize());
-		
-	}
 	
 	public void clearAll() throws Exception {
-		broadcast(new BroadcastMessage(CLEAR));
+		clusterMaster.clearAll();
 	}
 	
 	public void resetAll() throws Exception {
-		broadcast(new BroadcastMessage(RESET));
+		clusterMaster.resetAll();
 	}
 	
 	public void connectNets() throws Exception {
-		broadcast(new BroadcastMessage(Type.CONNECT_NETS));
+		clusterMaster.connectNets();
 	}
-	
-	public void broadcast(BroadcastMessage message) throws IOException {
-		
-		Map<String, Object> headers = new HashMap<String, Object>();
-		
-		message.populateHeaders(headers);
-		
-		BasicProperties props = new BasicProperties.Builder()
-		.headers(headers)
-		.build();
-
-		byte[] bytes = mapper.writeValueAsBytes(message);
-		
-		broadcastChannel.basicPublish(routing.getBroadcastExchangeName(), "", props, bytes);
-	}
-
 	
 	public void loadSimulation(String filename) throws Exception {
 
@@ -201,7 +141,8 @@ public class Master {
 		driver.initialiseModels();
 	}
 	
-	public void simulate() throws Exception {
+	public void simulate(boolean verbose) throws Exception {
+		simulator.setVerbose(verbose);
 		simulator.simulate(netlist, simulationEnd, localNode.getNode().getNetlist().getTestProbes());
 	}
 }

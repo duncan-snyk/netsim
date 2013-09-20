@@ -10,13 +10,16 @@ public class RemoteNode {
 	private BroadcastListener broadcastListener;
 	
 	@Autowired
-	private RoutedNetsListener netsListener;
-	
-	@Autowired
 	private NodeListener nodeListener;
 	
 	@Autowired
 	private Node node;
+	
+	private NetsListener netsListener;
+	
+	public void setNetsListener(NetsListener listener) {
+		netsListener = listener;
+	}
 	
 	public void initialise() throws Exception {
 		node.initialise();

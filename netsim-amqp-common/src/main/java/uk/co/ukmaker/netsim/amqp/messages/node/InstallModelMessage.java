@@ -3,7 +3,7 @@ package uk.co.ukmaker.netsim.amqp.messages.node;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 import uk.co.ukmaker.netsim.models.Model;
 import uk.co.ukmaker.netsim.pins.Pin;
 
@@ -13,7 +13,7 @@ import uk.co.ukmaker.netsim.pins.Pin;
  * @author mcintyred
  *
  */
-public class InstallModelMessage implements Message {
+public class InstallModelMessage implements NetsimMessage {
 	
 	public static final String TYPE = "IM";
 

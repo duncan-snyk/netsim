@@ -1,6 +1,5 @@
 package uk.co.ukmaker.netsim.amqp.master;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,7 +10,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import uk.co.ukmaker.netsim.ScheduledValue;
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateInputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.node.PropagateOutputsMessage;
 import uk.co.ukmaker.netsim.amqp.messages.nodereply.PropagatedNetDriversMessage;
@@ -52,11 +51,18 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		this.cluster = cluster;
 		netNodeMap = new HashMap<ClusterNode, Set<String>>();
 		
-		List<Model> models = netlist.getModels();
+		List<Model> models = new ArrayList<Model>();
 		List<TestProbe> testProbes = netlist.getTestProbes();
 		// Install the testprobes on the local node
 		for(TestProbe probe : testProbes) {
 			installModel(probe,  localClusterNode);
+		}
+		
+		// build the list of non-probe models
+		for(Model m : netlist.getModels()) {
+			if(!(m instanceof TestProbe)) {
+				models.add(m);
+			}
 		}
 		
 		// give each node a fair proportion of the models
@@ -74,7 +80,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 			remoteNodes.add(localClusterNode);
 		}
 		
-		int nonProbeModels = models.size() - testProbes.size();
+		int nonProbeModels = models.size();
 		
 		int modelsPerNode;
 		int leftovers;
@@ -87,31 +93,23 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		for(ClusterNode node : remoteNodes) {
 			for(int i=0; i<modelsPerNode; i++) {
 				
-				Model m;
-				
-				do {
-					m = modelsIterator.next();
-				} while(m instanceof TestProbe);
-				
+				Model m = modelsIterator.next();
 				installModel(m, node);				
 			}
 		}
 		
-		for(ClusterNode node : remoteNodes) {
-			for(int i=0; i<leftovers; i++) {
-				Model m;
-				
-				do {
-					m = modelsIterator.next();
-				} while(m instanceof TestProbe);
-				
-				installModel(m, node);				
-			}
+		// put the leftovers all on the first remote node
+		ClusterNode node = remoteNodes.get(0);
+		
+		for(int i=0; i<leftovers; i++) {
+			Model m = modelsIterator.next();
+			
+			installModel(m, node);				
 		}
 	}
 	
 	public void installModel(Model m, ClusterNode n) throws Exception {
-		Future<Message> ack = n.installModel(m);
+		Future<NetsimMessage> ack = n.installModel(m);
 		for(Net net : m.getNets()) {
 			if(!netNodeMap.containsKey(n)) {
 				netNodeMap.put(n,  new HashSet<String>());
@@ -126,7 +124,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	public Map<String, Set<Long>> initialiseModels() throws Exception {
 		// send an initialise message to each node
 		// then wait for the responses
-		List<Future<Message>> responses = new ArrayList<>();
+		List<Future<NetsimMessage>> responses = new ArrayList<>();
 		
 		Map<String, Set<Long>> nextValues = new HashMap<String, Set<Long>>();
 		
@@ -135,7 +133,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		}
 		
 		// Wait for the responses and callback to the simulator as we get them
-		for(Future<Message> response : responses) {
+		for(Future<NetsimMessage> response : responses) {
 			UpdateEventQueueMessage m = (UpdateEventQueueMessage)response.get();
 			for(String netId : m.getNetMoments().keySet()) {
 				if(!nextValues.containsKey(netId)) {
@@ -153,7 +151,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	public Map<String, Integer> propagateOutputs(long moment, Set<String> netIds,
 			NetEventPropagator propagator) throws Exception {
 		
-		List<Future<Message>> responses = new ArrayList<>();
+		List<Future<NetsimMessage>> responses = new ArrayList<>();
 		for(ClusterNode n : cluster.getNodes()) {
 			Set<String> nodeNets = new HashSet<String>();
 			for(String netId : netIds) {
@@ -172,7 +170,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		Map<String, Integer> netDrivers = new HashMap<String, Integer>();
 		
 		// Wait for the responses and callback to the simulator as we get them
-		for(Future<Message> response : responses) {
+		for(Future<NetsimMessage> response : responses) {
 			PropagatedNetDriversMessage r = (PropagatedNetDriversMessage)response.get();
 			
 			for(String netId : r.getNetDrivers().keySet()) {
@@ -190,7 +188,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	@Override
 	public void propagateInputs(long moment, Map<String, Integer> netDrivers) throws Exception {
 		
-		List<Future<Message>> responses = new ArrayList<>();
+		List<Future<NetsimMessage>> responses = new ArrayList<>();
 		
 		for(ClusterNode n : cluster.getNodes()) {
 			
@@ -208,7 +206,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		}
 		
 		// wait for the acks
-		for(Future<Message> f : responses) {
+		for(Future<NetsimMessage> f : responses) {
 			f.get();
 		}
 	}
@@ -217,7 +215,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 	public Map<String, Set<Long>> updateModels(long moment) throws Exception {
 		// send an initialise message to each node
 		// then wait for the responses
-		List<Future<Message>> responses = new ArrayList<>();
+		List<Future<NetsimMessage>> responses = new ArrayList<>();
 		
 		Map<String, Set<Long>> nextValues = new HashMap<String, Set<Long>>();
 		
@@ -226,7 +224,7 @@ public class DistributedNetlistDriver implements NetlistDriver {
 		}
 		
 		// Wait for the responses and callback to the simulator as we get them
-		for(Future<Message> response : responses) {
+		for(Future<NetsimMessage> response : responses) {
 			UpdateEventQueueMessage m = (UpdateEventQueueMessage)response.get();
 			for(String netId : m.getNetMoments().keySet()) {
 				if(!nextValues.containsKey(netId)) {

@@ -2,9 +2,9 @@ package uk.co.ukmaker.netsim.amqp.messages.node;
 
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
-public class UpdateModelsMessage implements Message {
+public class UpdateModelsMessage implements NetsimMessage {
 	
 	public static final String TYPE = "UM";
 	

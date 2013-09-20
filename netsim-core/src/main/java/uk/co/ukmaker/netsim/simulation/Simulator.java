@@ -32,8 +32,14 @@ public class Simulator implements NetEventPropagator {
 	
 	private int printed = 0;
 	
+	private boolean verbose = true;
+	
 	public void setNetlistDriver(NetlistDriver driver) {
 		this.driver = driver;
+	}
+	
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 	
 	public void simulate(Netlist netlist, long howLongFor, List<TestProbe> testProbes) throws Exception {
@@ -56,7 +62,7 @@ public class Simulator implements NetEventPropagator {
 		updateEventQueue(driver.initialiseModels());
 		moment = useNextMoment();
 		
-		while(moment < howLongFor) {
+		while(moment >= 0 && moment < howLongFor) {
 			
 			List<NetEvent> netEvents = netEventQueue.useScheduledEvents(moment);
 			Set<String> netsToPropagate = new HashSet<String>();
@@ -84,7 +90,7 @@ public class Simulator implements NetEventPropagator {
 		NetEvent nextEvent = netEventQueue.head();
 		
 		if(nextEvent == null) {
-			throw new Exception("No new net events are queued");
+			return -1;
 		}
 		
 		if(nextEvent.moment < lastmoment) {
@@ -176,6 +182,10 @@ public class Simulator implements NetEventPropagator {
 		int i = 0;
 		
 		boolean hasErrors = false;
+		
+		if(!verbose) {
+			return;
+		}
 		
 		if(printed == 20) {
 			printHeaders();

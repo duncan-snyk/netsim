@@ -2,9 +2,9 @@ package uk.co.ukmaker.netsim.amqp.messages.discovery;
 
 import java.util.Map;
 
-import uk.co.ukmaker.netsim.amqp.messages.Message;
+import uk.co.ukmaker.netsim.amqp.messages.NetsimMessage;
 
-public class EnumeratedMessage implements Message {
+public class EnumeratedMessage implements NetsimMessage {
 	
 	public static final String TYPE = "ENM";
 	

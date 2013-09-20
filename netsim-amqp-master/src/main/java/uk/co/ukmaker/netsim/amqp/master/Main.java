@@ -16,6 +16,8 @@ public class Main {
 	
 	private Master master;
 	
+	private boolean verbose = false;
+	
 	public Main(Master master) {
 		this.master = master;
 	}
@@ -25,6 +27,8 @@ public class Main {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
+		
+		System.setProperty("spring.profiles.active", "template");
 		
 		ApplicationContext ctx = new ClassPathXmlApplicationContext("master-context.xml");
 		
@@ -42,7 +46,7 @@ public class Main {
 		while(true) {
 			
 			try {
-				
+				System.out.println();
 				System.out.print("netsim>");
     			
     			String command = bufferedReader.readLine();		
@@ -66,22 +70,34 @@ public class Main {
     				
     				master.loadSimulation(bits[1]);
     				
-    			} else if("installModels".equals(bits[0])) {
+    			} else if("installModels".equalsIgnoreCase(bits[0]) || "im".equalsIgnoreCase(bits[0])) {
     				
     				master.installModels();
     				
-    			} else if("connectNets".equals(bits[0])) {
+    			} else if("connectNets".equalsIgnoreCase(bits[0]) || "cn".equalsIgnoreCase(bits[0])) {
     				
     				master.connectNets();
+    				
+    			} else if("reset".equals(bits[0])) {
+    				
+    				master.resetAll();
+    				
+    			} else if("clear".equals(bits[0])) {
+    				
+    				master.clearAll();
     				
     			} else if("initialiseModels".equals(bits[0])) {
     				
     				master.initialiseModels();
     				
+    			} else if("verbose".equalsIgnoreCase(bits[0])) {
+    				
+    				verbose = true;
+    				
     			} else if("simulate".equals(bits[0])) {
     				
     				long start = System.currentTimeMillis();
-    				master.simulate();
+    				master.simulate(verbose);
     				long end = System.currentTimeMillis();
     				System.out.println("Simulation elapsed time (ms) = "+(end - start));
     				
@@ -106,11 +122,13 @@ public class Main {
     				
     				master.connectNets();
     				
-    				master.simulate();
+    				master.simulate(verbose);
     				
     			} else if("help".equals(bits[0])) {
     				
     				System.out.println("Commands:");
+    				System.out.println("reset");
+    				System.out.println("clear");
     				System.out.println("enumerate");
     				System.out.println("load <fileName>");
     				System.out.println("installModels");
@@ -119,6 +137,8 @@ public class Main {
     				System.out.println("run <fileName>");
     				System.out.println("simulate");
     				System.out.println("");
+    			} else {
+    				System.out.println("ERROR - Unknown command '"+bits[0]+"'");
     			}
     			
 			} catch(Exception e) {
